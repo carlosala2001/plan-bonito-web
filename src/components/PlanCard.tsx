@@ -42,7 +42,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
   return (
     <Card className={plan.highlight ? "plan-card-highlight" : "plan-card"}>
       {plan.highlight && (
-        <div className="absolute -top-3 left-0 right-0 mx-auto w-40 rounded-full bg-gradient-zenoscale px-4 py-1 text-center text-xs font-semibold text-white shadow-md">
+        <div className="absolute -top-3 left-0 right-0 mx-auto w-max px-4 py-1 rounded-full bg-gradient-zenoscale text-center text-xs font-semibold text-white shadow-md">
           Recomendado
         </div>
       )}
@@ -58,7 +58,6 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
             <span className="text-3xl font-bold">{plan.price}</span>
             <span className="text-lg font-medium text-muted-foreground">€/mes</span>
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">{plan.credits} Créditos</div>
         </div>
 
         <div className="my-6 space-y-4">

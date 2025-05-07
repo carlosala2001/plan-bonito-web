@@ -3,8 +3,8 @@ import { Plan } from "@/components/PlanCard";
 
 export const plansData: Plan[] = [
   {
-    name: "MiniCube",
-    price: 10,
+    name: "🧩 Starter Pack 🧩",
+    price: 1.99,
     credits: 10,
     resources: {
       cpu: { value: "1.5", unit: "vCores" },
@@ -22,8 +22,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Galaxy",
-    price: 26,
+    name: "🌌 Explorer Pack 🌌",
+    price: 2.79,
     credits: 26,
     resources: {
       cpu: { value: "2", unit: "vCores" },
@@ -41,8 +41,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Obsidian",
-    price: 42,
+    name: "🖤 Shadow Pack 🖤",
+    price: 4.19,
     credits: 42,
     resources: {
       cpu: { value: "2", unit: "vCores" },
@@ -61,8 +61,8 @@ export const plansData: Plan[] = [
     highlight: true
   },
   {
-    name: "Inferno",
-    price: 56,
+    name: "🔥 Blaze Pack 🔥",
+    price: 5.59,
     credits: 56,
     resources: {
       cpu: { value: "3.5", unit: "vCores" },
@@ -80,8 +80,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Storm",
-    price: 70,
+    name: "⚡ Thunder Pack ⚡",
+    price: 6.99,
     credits: 70,
     resources: {
       cpu: { value: "4", unit: "vCores" },
@@ -99,8 +99,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Dragon",
-    price: 112,
+    name: "🐉 Mythic Pack 🐉",
+    price: 11.19,
     credits: 112,
     resources: {
       cpu: { value: "5.5", unit: "vCores" },
@@ -118,8 +118,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Quantum",
-    price: 140,
+    name: "⚡ Apex Pack ⚡",
+    price: 13.99,
     credits: 140,
     resources: {
       cpu: { value: "6", unit: "vCores" },
@@ -137,8 +137,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Nebula",
-    price: 176,
+    name: "🌌 Cosmic Pack 🌌",
+    price: 16.99,
     credits: 176,
     resources: {
       cpu: { value: "6.5", unit: "vCores" },
@@ -156,8 +156,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "Titan",
-    price: 210,
+    name: "👑 Royal Pack 👑",
+    price: 20.99,
     credits: 210,
     resources: {
       cpu: { value: "7.5", unit: "vCores" },
@@ -175,8 +175,8 @@ export const plansData: Plan[] = [
     }
   },
   {
-    name: "ZenoScale",
-    price: 300,
+    name: "💎 Zeno Pack 💎",
+    price: 29.99,
     credits: 300,
     resources: {
       cpu: { value: "9.5", unit: "vCores" },

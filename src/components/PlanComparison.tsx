@@ -31,7 +31,7 @@ const PlanComparison: React.FC = () => {
             <TableBody>
               {plansData.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
-                  <TableCell className="font-medium">{plan.name}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell>{plan.resources.cpu.value} {plan.resources.cpu.unit}</TableCell>
                   <TableCell>{plan.resources.ram.value} {plan.resources.ram.unit}</TableCell>
                   <TableCell>{plan.resources.disk.value} {plan.resources.disk.unit}</TableCell>
@@ -59,7 +59,7 @@ const PlanComparison: React.FC = () => {
             <TableBody>
               {plansData.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
-                  <TableCell className="font-medium">{plan.name}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.idealFor}</TableCell>
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.perfectFor}</TableCell>
                   <TableCell><CheckIcon className="h-4 w-4 text-green-500" /></TableCell>
