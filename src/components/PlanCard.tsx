@@ -7,7 +7,6 @@ import { CheckIcon, CpuIcon, HardDriveIcon, DatabaseIcon } from "lucide-react";
 export interface Plan {
   name: string;
   price: number;
-  credits: number;
   resources: {
     cpu: {
       value: string;
@@ -39,10 +38,13 @@ interface PlanCardProps {
 }
 
 const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
+  // Convert disk size from MB to GB
+  const diskSizeGB = (plan.resources.disk.value / 1024).toFixed(1);
+  
   return (
     <Card className={plan.highlight ? "plan-card-highlight" : "plan-card"}>
       {plan.highlight && (
-        <div className="absolute -top-3 left-0 right-0 mx-auto w-max px-4 py-1 rounded-full bg-gradient-zenoscale text-center text-xs font-semibold text-white shadow-md">
+        <div className="absolute -top-3 left-0 right-0 mx-auto w-max px-6 py-1.5 rounded-full bg-gradient-zenoscale text-center text-xs font-semibold text-white shadow-md">
           Recomendado
         </div>
       )}
@@ -92,7 +94,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
                 <HardDriveIcon className="h-5 w-5 text-primary" />
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Disco</div>
-                  <div className="font-medium">{plan.resources.disk.value} {plan.resources.disk.unit}</div>
+                  <div className="font-medium">{diskSizeGB} GB</div>
                 </div>
               </div>
               

@@ -34,7 +34,7 @@ const PlanComparison: React.FC = () => {
                   <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell>{plan.resources.cpu.value} {plan.resources.cpu.unit}</TableCell>
                   <TableCell>{plan.resources.ram.value} {plan.resources.ram.unit}</TableCell>
-                  <TableCell>{plan.resources.disk.value} {plan.resources.disk.unit}</TableCell>
+                  <TableCell>{(plan.resources.disk.value / 1024).toFixed(1)} GB</TableCell>
                   <TableCell>{plan.resources.backups}</TableCell>
                   <TableCell>{plan.resources.databases}</TableCell>
                   <TableCell>{plan.resources.ports}</TableCell>
