@@ -63,44 +63,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Preguntas Frecuentes</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Resolvemos tus dudas sobre nuestros planes y servicios
-            </p>
-          </div>
-          <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
-            <div className="plan-card p-6">
-              <h3 className="mb-2 font-medium">¿Cómo funciona el sistema de créditos?</h3>
-              <p className="text-sm text-muted-foreground">
-                Los créditos son nuestra moneda interna y se utilizan para mantener tu servidor activo. Cada plan tiene un consumo mínimo de créditos mensual.
-              </p>
-            </div>
-            <div className="plan-card p-6">
-              <h3 className="mb-2 font-medium">¿Puedo cambiar de plan en cualquier momento?</h3>
-              <p className="text-sm text-muted-foreground">
-                Sí, puedes actualizar o cambiar tu plan en cualquier momento según evolucionen tus necesidades.
-              </p>
-            </div>
-            <div className="plan-card p-6">
-              <h3 className="mb-2 font-medium">¿Qué significa "No limit"?</h3>
-              <p className="text-sm text-muted-foreground">
-                Significa que no hay restricción en el número de servidores que puedes crear mientras tengas suficientes créditos.
-              </p>
-            </div>
-            <div className="plan-card p-6">
-              <h3 className="mb-2 font-medium">¿Cómo funcionan las copias de seguridad?</h3>
-              <p className="text-sm text-muted-foreground">
-                Cada plan incluye un número específico de copias de seguridad que se guardan automáticamente para proteger tus datos.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center">

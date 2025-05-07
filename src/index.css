@@ -104,6 +104,14 @@
   .feature-item {
     @apply flex items-center gap-2 text-sm leading-tight;
   }
+  
+  .resource-card {
+    @apply flex items-center gap-2 p-2 bg-muted/50 rounded-lg transition-all hover:bg-muted hover:shadow-sm;
+  }
+  
+  .resource-info {
+    @apply flex flex-col justify-center;
+  }
 }
 
 .shine-effect {
@@ -172,4 +180,8 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+.bg-gradient-zenoscale {
+  background: linear-gradient(90deg, #7B6CF6 0%, #73B9FF 100%);
 }
