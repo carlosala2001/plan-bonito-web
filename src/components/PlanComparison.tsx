@@ -53,7 +53,6 @@ const PlanComparison: React.FC = () => {
                 <TableHead>Ideal Para</TableHead>
                 <TableHead>Perfecto Para</TableHead>
                 <TableHead>Sin Límite</TableHead>
-                <TableHead>Mínimo Créditos</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -63,7 +62,6 @@ const PlanComparison: React.FC = () => {
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.idealFor}</TableCell>
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.perfectFor}</TableCell>
                   <TableCell><CheckIcon className="h-4 w-4 text-green-500" /></TableCell>
-                  <TableCell>{plan.minCredits.toLocaleString('es-ES')}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
