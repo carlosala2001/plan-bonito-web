@@ -14,7 +14,7 @@ const games = [
   },
   {
     name: "Counter-Strike 2",
-    logo: "https://static.wikia.nocookie.net/logopedia/images/4/49/Counter-Strike_2_%28Icon%29.png/revision/latest?cb=20230330015359",
+    logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
     description: "Para comunidades y equipos"
   },
   {
