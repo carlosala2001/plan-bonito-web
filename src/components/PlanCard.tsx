@@ -52,36 +52,36 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
           Recomendado
         </div>
       )}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold">{plan.name}</h3>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs">No limit</span>
+          <h3 className="text-lg sm:text-xl font-bold">{plan.name}</h3>
+          <span className="rounded-full bg-muted px-2 py-1 text-xs">No limit</span>
         </div>
 
-        <div className="my-4">
-          <div className="mb-2 text-sm font-medium text-muted-foreground">Precio</div>
+        <div className="my-3 sm:my-4">
+          <div className="mb-1 sm:mb-2 text-sm font-medium text-muted-foreground">Precio</div>
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold">{plan.price}</span>
-            <span className="text-lg font-medium text-muted-foreground">€/mes</span>
+            <span className="text-2xl sm:text-3xl font-bold">{plan.price}</span>
+            <span className="text-base sm:text-lg font-medium text-muted-foreground">€/mes</span>
           </div>
         </div>
 
-        <div className="my-6 space-y-4">
+        <div className="my-4 sm:my-6 space-y-3 sm:space-y-4">
           <div>
-            <div className="mb-4 text-sm font-medium">Datos de recursos:</div>
+            <div className="mb-3 sm:mb-4 text-sm font-medium">Datos de recursos:</div>
             
             {/* Enhanced Resources Display */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3">
               <div className="resource-card">
-                <CpuIcon className="h-5 w-5 text-primary" />
+                <CpuIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">CPU</div>
-                  <div className="font-medium">{plan.resources.cpu.value} {plan.resources.cpu.unit}</div>
+                  <div className="text-sm sm:font-medium">{plan.resources.cpu.value} {plan.resources.cpu.unit}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 text-primary">
                   <path d="M6 19v-3"></path>
                   <path d="M10 19v-3"></path>
                   <path d="M14 19v-3"></path>
@@ -90,20 +90,20 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
                 </svg>
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">RAM</div>
-                  <div className="font-medium">{plan.resources.ram.value} {plan.resources.ram.unit}</div>
+                  <div className="text-sm sm:font-medium">{plan.resources.ram.value} {plan.resources.ram.unit}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <HardDriveIcon className="h-5 w-5 text-primary" />
+                <HardDriveIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Disco</div>
-                  <div className="font-medium">{diskSizeGB} GB</div>
+                  <div className="text-sm sm:font-medium">{diskSizeGB} GB</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 text-primary">
                   <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                   <path d="M6 8h.01"></path>
                   <path d="M6 12h.01"></path>
@@ -114,20 +114,20 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
                 </svg>
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Copias de Seguridad</div>
-                  <div className="font-medium">{plan.resources.backups}</div>
+                  <div className="text-sm sm:font-medium">{plan.resources.backups}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <DatabaseIcon className="h-5 w-5 text-primary" />
+                <DatabaseIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">MySQL Bases de Datos</div>
-                  <div className="font-medium">{plan.resources.databases}</div>
+                  <div className="text-sm sm:font-medium">{plan.resources.databases}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 text-primary">
                   <rect x="4" y="4" width="16" height="16" rx="2"></rect>
                   <rect x="9" y="9" width="6" height="6"></rect>
                   <path d="M15 2v2"></path>
@@ -137,52 +137,52 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
                 </svg>
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Asignaciones (puertos)</div>
-                  <div className="font-medium">{plan.resources.ports}</div>
+                  <div className="text-sm sm:font-medium">{plan.resources.ports}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 text-primary">
                   <path d="M4 10c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2"></path>
                   <path d="M10 16c-1.1 0-2-.9-2-2v-4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2"></path>
                   <rect x="14" y="14" width="8" height="8" rx="2"></rect>
                 </svg>
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Billing Period</div>
-                  <div className="font-medium">{plan.billing}</div>
+                  <div className="text-sm sm:font-medium">{plan.billing}</div>
                 </div>
               </div>
               
               <div className="resource-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 text-primary">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M12 6v6l4 2"></path>
                 </svg>
                 <div className="resource-info">
                   <div className="text-xs text-muted-foreground">Mínimo Créditos</div>
-                  <div className="font-medium">{plan.minCredits.toLocaleString('es-ES')}</div>
+                  <div className="text-sm sm:font-medium">{plan.minCredits.toLocaleString('es-ES')}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6">
-            <div className="mb-3 text-sm font-medium">Descripción:</div>
-            <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+          <div className="mt-4 sm:mt-6">
+            <div className="mb-2 sm:mb-3 text-sm font-medium">Descripción:</div>
+            <div className="space-y-2 bg-muted/30 p-2 sm:p-3 rounded-lg">
               <div className="feature-item">
-                <CheckIcon className="h-4 w-4 text-primary" />
-                <span className="text-sm">{plan.description.idealFor}</span>
+                <CheckIcon className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <span className="text-xs sm:text-sm">{plan.description.idealFor}</span>
               </div>
               <div className="feature-item">
-                <CheckIcon className="h-4 w-4 text-primary" />
-                <span className="text-sm">{plan.description.perfectFor}</span>
+                <CheckIcon className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <span className="text-xs sm:text-sm">{plan.description.perfectFor}</span>
               </div>
             </div>
           </div>
         </div>
 
         <Button 
-          className="shine-effect mt-6 w-full bg-gradient-zenoscale text-white"
+          className="shine-effect mt-4 sm:mt-6 w-full bg-gradient-zenoscale text-white"
           onClick={handleCreateServer}
         >
           Crear Servidor

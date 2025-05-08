@@ -103,11 +103,11 @@
   }
 
   .feature-item {
-    @apply flex items-center gap-2 text-sm leading-tight;
+    @apply flex items-center gap-1.5 sm:gap-2 text-sm leading-tight;
   }
   
   .resource-card {
-    @apply flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded-lg transition-all hover:bg-muted hover:shadow-sm;
+    @apply flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-muted/50 dark:bg-muted/20 rounded-lg transition-all hover:bg-muted hover:shadow-sm;
   }
   
   .resource-info {
@@ -201,4 +201,30 @@ html * {
 
 .theme-toggle-dark {
   @apply bg-slate-800 text-white hover:bg-slate-700;
+}
+
+/* Mobile padding adjustments */
+@media (max-width: 640px) {
+  .container {
+    @apply px-3;
+  }
+  
+  .py-16 {
+    @apply py-8;
+  }
+  
+  .py-12 {
+    @apply py-6;
+  }
+  
+  .mb-12 {
+    @apply mb-6;
+  }
+}
+
+/* Extra small screen support */
+@screen xs {
+  .xs\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

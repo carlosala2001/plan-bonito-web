@@ -5,23 +5,12 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import PlanCard, { Plan } from "./PlanCard";
 import { plansData } from "@/data/plans";
 import { cn } from "@/lib/utils"; 
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PlanCarousel: React.FC = () => {
   const [api, setApi] = useState<any>();
   const [current, setCurrent] = useState(0);
-  const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Function to check if screen size is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!api) return;
@@ -37,19 +26,8 @@ const PlanCarousel: React.FC = () => {
     };
   }, [api]);
 
-  // Select the appropriate number of visible plans based on screen size
-  useEffect(() => {
-    // On mobile, show one plan at a time
-    if (isMobile) {
-      setVisiblePlans(plansData);
-    } else {
-      // On desktop, show three plans at a time
-      setVisiblePlans(plansData);
-    }
-  }, [isMobile]);
-
   return (
-    <div className="w-full py-6">
+    <div className="w-full py-4 sm:py-6">
       <Carousel 
         setApi={setApi} 
         className="w-full"
@@ -58,12 +36,12 @@ const PlanCarousel: React.FC = () => {
           loop: true,
         }}
       >
-        <CarouselContent className="-ml-4">
-          {visiblePlans.map((plan, index) => (
+        <CarouselContent className="-ml-2 sm:-ml-4">
+          {plansData.map((plan, index) => (
             <CarouselItem 
               key={index} 
               className={cn(
-                "pl-4",
+                "pl-2 sm:pl-4",
                 isMobile ? "basis-full" : "basis-1/3"
               )}
             >
@@ -73,15 +51,15 @@ const PlanCarousel: React.FC = () => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-4 sm:mt-6 flex items-center justify-center gap-2">
           <CarouselPrevious className="static translate-y-0 border-0" />
           <div className="flex gap-1.5">
-            {visiblePlans.map((_, index) => (
+            {plansData.map((_, index) => (
               <Button
                 key={index}
                 className={cn(
-                  "h-2.5 w-2.5 rounded-full p-0",
-                  index === current % visiblePlans.length
+                  "h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full p-0",
+                  index === current % plansData.length
                     ? "bg-gradient-zenoscale"
                     : "bg-muted"
                 )}
