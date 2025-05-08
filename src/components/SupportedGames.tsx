@@ -4,7 +4,7 @@ import React from "react";
 const games = [
   {
     name: "Minecraft",
-    logo: "https://static-00.iconduck.com/assets.00/minecraft-icon-512x512-8mie91i2.png",
+    logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
     description: "Java y Bedrock"
   },
   {
@@ -14,12 +14,12 @@ const games = [
   },
   {
     name: "Counter-Strike 2",
-    logo: "https://cdn.freebiesupply.com/logos/large/2x/counter-strike-global-offensive-logo-png-transparent.png",
+    logo: "https://static.wikia.nocookie.net/logopedia/images/4/49/Counter-Strike_2_%28Icon%29.png/revision/latest?cb=20230330015359",
     description: "Para comunidades y equipos"
   },
   {
     name: "Team Fortress 2",
-    logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/5f/Tf2_standalonebox.jpg/250px-Tf2_standalonebox.jpg",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
     description: "Servidores personalizables"
   },
   {
