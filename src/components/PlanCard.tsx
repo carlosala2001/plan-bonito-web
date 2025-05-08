@@ -40,6 +40,10 @@ interface PlanCardProps {
 const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
   // Convert disk size from MB to GB
   const diskSizeGB = (plan.resources.disk.value / 1024).toFixed(1);
+
+  const handleCreateServer = () => {
+    window.open('https://dash.zenoscale.es', '_blank');
+  };
   
   return (
     <Card className={plan.highlight ? "plan-card-highlight" : "plan-card"}>
@@ -177,7 +181,10 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
           </div>
         </div>
 
-        <Button className="shine-effect mt-6 w-full bg-gradient-zenoscale text-white">
+        <Button 
+          className="shine-effect mt-6 w-full bg-gradient-zenoscale text-white"
+          onClick={handleCreateServer}
+        >
           Crear Servidor
         </Button>
       </div>
