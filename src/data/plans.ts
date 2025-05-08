@@ -5,7 +5,6 @@ export const plansData: Plan[] = [
   {
     name: "🧩 Starter Pack 🧩",
     price: 1.99,
-    credits: 10,
     resources: {
       cpu: { value: "1.5", unit: "vCores" },
       ram: { value: 2048, unit: "MB" },
@@ -24,7 +23,6 @@ export const plansData: Plan[] = [
   {
     name: "🌌 Explorer Pack 🌌",
     price: 2.79,
-    credits: 26,
     resources: {
       cpu: { value: "2", unit: "vCores" },
       ram: { value: 3072, unit: "MB" },
@@ -43,7 +41,6 @@ export const plansData: Plan[] = [
   {
     name: "🖤 Shadow Pack 🖤",
     price: 4.19,
-    credits: 42,
     resources: {
       cpu: { value: "2", unit: "vCores" },
       ram: { value: 4096, unit: "MB" },
@@ -63,7 +60,6 @@ export const plansData: Plan[] = [
   {
     name: "🔥 Blaze Pack 🔥",
     price: 5.59,
-    credits: 56,
     resources: {
       cpu: { value: "3.5", unit: "vCores" },
       ram: { value: 5120, unit: "MB" },
@@ -82,7 +78,6 @@ export const plansData: Plan[] = [
   {
     name: "⚡ Thunder Pack ⚡",
     price: 6.99,
-    credits: 70,
     resources: {
       cpu: { value: "4", unit: "vCores" },
       ram: { value: 8192, unit: "MB" },
@@ -101,7 +96,6 @@ export const plansData: Plan[] = [
   {
     name: "🐉 Mythic Pack 🐉",
     price: 11.19,
-    credits: 112,
     resources: {
       cpu: { value: "5.5", unit: "vCores" },
       ram: { value: 10240, unit: "MB" },
@@ -120,7 +114,6 @@ export const plansData: Plan[] = [
   {
     name: "⚡ Apex Pack ⚡",
     price: 13.99,
-    credits: 140,
     resources: {
       cpu: { value: "6", unit: "vCores" },
       ram: { value: 12288, unit: "MB" },
@@ -139,7 +132,6 @@ export const plansData: Plan[] = [
   {
     name: "🌌 Cosmic Pack 🌌",
     price: 16.99,
-    credits: 176,
     resources: {
       cpu: { value: "6.5", unit: "vCores" },
       ram: { value: 16384, unit: "MB" },
@@ -158,7 +150,6 @@ export const plansData: Plan[] = [
   {
     name: "👑 Royal Pack 👑",
     price: 20.99,
-    credits: 210,
     resources: {
       cpu: { value: "7.5", unit: "vCores" },
       ram: { value: 20480, unit: "MB" },
@@ -177,7 +168,6 @@ export const plansData: Plan[] = [
   {
     name: "💎 Zeno Pack 💎",
     price: 29.99,
-    credits: 300,
     resources: {
       cpu: { value: "9.5", unit: "vCores" },
       ram: { value: 29960, unit: "MB" },

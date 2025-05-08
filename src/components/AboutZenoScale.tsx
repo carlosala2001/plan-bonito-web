@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Server, Shield, Cpu, Zap, GamingPad, Users } from "lucide-react";
+import { Server, Shield, Cpu, Zap, Gamepad2, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const features = [
   {
-    icon: <GamingPad className="h-6 w-6 text-primary" />,
+    icon: <Gamepad2 className="h-6 w-6 text-primary" />,
     title: "Hosting para videojuegos",
     description: "Minecraft, Garry's Mod, Counter-Strike 2, Team Fortress 2, ARK y más juegos optimizados para el mejor rendimiento."
   },
