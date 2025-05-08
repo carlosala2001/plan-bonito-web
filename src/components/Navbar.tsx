@@ -1,9 +1,12 @@
 
 import React from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
 
 const Navbar: React.FC = () => {
+  const { theme, setTheme } = useTheme();
+  
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -39,6 +42,15 @@ const Navbar: React.FC = () => {
           >
             Status Panel <ExternalLink className="h-3 w-3" />
           </a>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="mr-2"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
           <Button 
             className="bg-gradient-zenoscale" 
             size="sm"

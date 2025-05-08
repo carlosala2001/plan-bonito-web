@@ -61,25 +61,25 @@ const Index = () => {
       </section>
 
       {/* Key Benefits */}
-      <section className="py-12 bg-muted/30">
+      <section className="py-12 bg-muted/30 dark:bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card hover:shadow-md transition-all">
-              <div className="mb-4 bg-primary/10 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all">
+              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
                 <RocketIcon className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Alto Rendimiento</h3>
               <p className="text-muted-foreground">Servidores dedicados optimizados para juegos con virtualización eficiente</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card hover:shadow-md transition-all">
-              <div className="mb-4 bg-primary/10 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all">
+              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
                 <ServerIcon className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Escalabilidad Total</h3>
               <p className="text-muted-foreground">Flexibilidad para aumentar recursos según tus necesidades sin complicaciones</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card hover:shadow-md transition-all">
-              <div className="mb-4 bg-primary/10 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all">
+              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
                 <ShieldIcon className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Seguridad Garantizada</h3>
@@ -109,7 +109,7 @@ const Index = () => {
       <AboutZenoScale />
 
       {/* Comparison Table */}
-      <section id="comparativa" className="py-12 md:py-16 bg-muted/30">
+      <section id="comparativa" className="py-12 md:py-16 bg-muted/30 dark:bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">Comparativa de Packs</h2>
@@ -142,7 +142,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 bg-muted/20">
+      <footer className="border-t py-8 bg-muted/20 dark:bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">

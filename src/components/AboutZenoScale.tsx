@@ -38,7 +38,7 @@ const features = [
 
 const AboutZenoScale: React.FC = () => {
   return (
-    <section className="py-16 md:py-24" id="about">
+    <section className="py-16 md:py-24 dark:bg-background" id="about">
       <div className="container">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">Sobre ZenoScale</h2>
@@ -48,7 +48,7 @@ const AboutZenoScale: React.FC = () => {
         </div>
         
         <div className="mx-auto max-w-3xl">
-          <div className="mb-10 rounded-lg border bg-card p-6 shadow-sm">
+          <div className="mb-10 rounded-lg border bg-card dark:bg-card/50 p-6 shadow-sm">
             <h3 className="mb-2 text-xl font-semibold">Nuestra Misión</h3>
             <p className="text-muted-foreground">
               Ofrecer soluciones de hosting potentes, flexibles y accesibles, con atención técnica cercana y herramientas automatizadas que faciliten la gestión de servidores.
@@ -65,8 +65,8 @@ const AboutZenoScale: React.FC = () => {
         
         <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
-            <div key={index} className="rounded-lg border bg-card p-6 transition-all hover:shadow-md">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <div key={index} className="rounded-lg border bg-card dark:bg-card/50 p-6 transition-all hover:shadow-md">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
                 {feature.icon}
               </div>
               <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>

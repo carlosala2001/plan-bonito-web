@@ -91,14 +91,15 @@
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   .plan-card {
-    @apply relative overflow-hidden rounded-xl border bg-white shadow-md transition-all hover:shadow-lg;
+    @apply relative overflow-hidden rounded-xl border bg-white dark:bg-slate-800 shadow-md transition-all hover:shadow-lg;
   }
 
   .plan-card-highlight {
-    @apply relative overflow-hidden rounded-xl border-2 border-primary bg-white shadow-lg transition-all hover:shadow-xl;
+    @apply relative overflow-hidden rounded-xl border-2 border-primary bg-white dark:bg-slate-800 shadow-lg transition-all hover:shadow-xl;
   }
 
   .feature-item {
@@ -106,7 +107,7 @@
   }
   
   .resource-card {
-    @apply flex items-center gap-2 p-2 bg-muted/50 rounded-lg transition-all hover:bg-muted hover:shadow-sm;
+    @apply flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded-lg transition-all hover:bg-muted hover:shadow-sm;
   }
   
   .resource-info {
@@ -184,4 +185,20 @@
 
 .bg-gradient-zenoscale {
   background: linear-gradient(90deg, #7B6CF6 0%, #73B9FF 100%);
+}
+
+/* Dark mode transition */
+html,
+html * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.theme-toggle {
+  @apply relative rounded-full bg-white p-2 text-slate-800 shadow-md transition-all hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-primary;
+}
+
+.theme-toggle-dark {
+  @apply bg-slate-800 text-white hover:bg-slate-700;
 }
