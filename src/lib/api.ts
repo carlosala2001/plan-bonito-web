@@ -3,7 +3,8 @@ import axios from 'axios';
 
 // Create an axios instance with default configuration
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  // Use window.location.origin to work in both development and production environments
+  baseURL: `${window.location.origin}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

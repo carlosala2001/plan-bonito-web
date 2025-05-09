@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
 
 type LoginFormData = {
   email: string;
@@ -27,6 +28,7 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [isFirstUser, setIsFirstUser] = useState(false);
   const [isCheckingFirstUser, setIsCheckingFirstUser] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   
   const loginForm = useForm<LoginFormData>({
     defaultValues: {
@@ -53,11 +55,14 @@ const AdminLogin: React.FC = () => {
     // Check if this is the first user
     const checkFirstUser = async () => {
       try {
+        setApiError(null);
         const response = await api.get('/admin/check-first-user');
         setIsFirstUser(response.data.isFirstUser);
       } catch (error) {
         console.error('Error checking first user:', error);
-        toast.error('Error al verificar usuarios');
+        setApiError('No se pudo conectar con el servidor. Asegúrate de que el servidor backend esté en ejecución.');
+        // Default to first user if server is unavailable (helps with first setup)
+        setIsFirstUser(true);
       } finally {
         setIsCheckingFirstUser(false);
       }
@@ -68,6 +73,7 @@ const AdminLogin: React.FC = () => {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
+      setApiError(null);
       await login(data.email, data.password);
       navigate('/admin');
     } catch (error) {
@@ -82,6 +88,7 @@ const AdminLogin: React.FC = () => {
     }
     
     try {
+      setApiError(null);
       await registerFirstUser(data.email, data.username, data.password);
       navigate('/admin');
     } catch (error) {
@@ -107,6 +114,13 @@ const AdminLogin: React.FC = () => {
               ? 'Crea tu cuenta de administrador para comenzar' 
               : 'Introduce tus credenciales para acceder al panel de administración'}
           </CardDescription>
+          
+          {apiError && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center gap-2 text-yellow-700">
+              <AlertTriangle size={18} />
+              <p className="text-sm">{apiError}</p>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isFirstUser ? (

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -335,8 +334,16 @@ app.get('/api/ctrlpanel/servers/stats', authenticateToken, async (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
+  // Serve API requests
+  app.use('/api', (req, res, next) => {
+    if (req.url.startsWith('/api')) {
+      next();
+    } else {
+      express.static(path.join(__dirname, '../dist'))(req, res, next);
+    }
+  });
   
+  // Serve the frontend for all other routes
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
   });

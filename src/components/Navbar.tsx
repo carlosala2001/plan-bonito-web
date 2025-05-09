@@ -1,8 +1,9 @@
 
 import React from "react";
-import { ExternalLink, Moon, Sun } from "lucide-react";
+import { ExternalLink, Moon, Sun, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { Link } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -42,6 +43,20 @@ const Navbar: React.FC = () => {
           >
             Status Panel <ExternalLink className="h-3 w-3" />
           </a>
+          <a 
+            href="https://metalpanel.zenoscale.es/"
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm hover:text-primary hover:underline"
+          >
+            MetalScale <ExternalLink className="h-3 w-3" />
+          </a>
+          <Link 
+            to="/admin/login"
+            className="flex items-center gap-1 text-sm hover:text-primary hover:underline"
+          >
+            <Shield className="h-4 w-4" /> Admin
+          </Link>
           <Button 
             variant="ghost" 
             size="icon"
