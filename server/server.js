@@ -1,16 +1,12 @@
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const axios = require('axios');
-const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
 const path = require('path');
+require('dotenv').config();
 
-// Load environment variables
-dotenv.config();
-
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -18,344 +14,308 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Database connection
-const dbConfig = {
+// Database connection pool
+const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'zenoscale_admin',
-};
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
-
-// Initialize database tables
-async function initializeDatabase() {
+// Setup the database
+async function setupDatabase() {
   try {
     const connection = await pool.getConnection();
     
-    // Create admin users table if it doesn't exist
+    // Create users table if not exists
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS admin_users (
+      CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
+        username VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     
-    // Create API config table if it doesn't exist
+    // Create api_keys table if not exists
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS api_config (
+      CREATE TABLE IF NOT EXISTS api_keys (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        value TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        name VARCHAR(100) NOT NULL,
+        key_value VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     
     connection.release();
-    console.log('Database initialized successfully');
+    console.log('Database setup completed successfully');
   } catch (error) {
-    console.error('Database initialization error:', error);
-    process.exit(1);
+    console.error('Error setting up database:', error);
   }
 }
 
-// Authentication middleware
+setupDatabase();
+
+// Check if first user
+app.get('/api/admin/check-first-user', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM users');
+    const isFirstUser = rows[0].count === 0;
+    res.json({ isFirstUser });
+  } catch (error) {
+    console.error('Error checking first user:', error);
+    res.status(500).json({ error: 'Error checking first user' });
+  }
+});
+
+// Register first admin user
+app.post('/api/admin/register-first-user', async (req, res) => {
+  try {
+    const { email, username, password } = req.body;
+    
+    // Check if this is actually the first user
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM users');
+    if (rows[0].count > 0) {
+      return res.status(403).json({ error: 'An admin user already exists' });
+    }
+    
+    // Validate input
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Insert the user
+    await pool.query(
+      'INSERT INTO users (email, username, password) VALUES (?, ?, ?)',
+      [email, username, hashedPassword]
+    );
+    
+    // Generate token
+    const token = jwt.sign(
+      { email, username },
+      process.env.JWT_SECRET || 'zenoscale_secret',
+      { expiresIn: '24h' }
+    );
+    
+    // Store token in local storage
+    res.json({
+      message: 'Admin user created successfully',
+      token,
+      user: { email, username }
+    });
+  } catch (error) {
+    console.error('Error registering first user:', error);
+    res.status(500).json({ error: 'Error registering user' });
+  }
+});
+
+// Login endpoint
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    
+    // Get user by email
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const user = users[0];
+    
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Generate token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, username: user.username },
+      process.env.JWT_SECRET || 'zenoscale_secret',
+      { expiresIn: '24h' }
+    );
+    
+    // Return user info and token
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+      token
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ error: 'Error during login' });
+  }
+});
+
+// Middleware to check auth token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
   }
   
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET || 'zenoscale_secret', (err, user) => {
     if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
+      return res.status(403).json({ error: 'Forbidden: Invalid token' });
     }
-    
     req.user = user;
     next();
   });
 };
 
-// Check if first user exists
-app.get('/api/admin/check-first-user', async (req, res) => {
+// API Key management endpoints
+app.get('/api/admin/api-keys', authenticateToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query('SELECT COUNT(*) as count FROM admin_users');
-    connection.release();
-    
-    const isFirstUser = rows[0].count === 0;
-    res.json({ isFirstUser });
+    const [keys] = await pool.query('SELECT id, name, key_value, created_at FROM api_keys');
+    res.json(keys);
   } catch (error) {
-    console.error('Error checking first user:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching API keys:', error);
+    res.status(500).json({ error: 'Error fetching API keys' });
   }
 });
 
-// Register first admin user
-app.post('/api/admin/register-first', async (req, res) => {
+app.post('/api/admin/api-keys', authenticateToken, async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { name, key_value } = req.body;
     
-    // Check if any user exists
-    const connection = await pool.getConnection();
-    const [users] = await connection.query('SELECT COUNT(*) as count FROM admin_users');
-    
-    if (users[0].count > 0) {
-      connection.release();
-      return res.status(403).json({ message: 'Admin user already exists' });
+    if (!name || !key_value) {
+      return res.status(400).json({ error: 'Name and key value are required' });
     }
     
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Insert user
-    const [result] = await connection.query(
-      'INSERT INTO admin_users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+    const [result] = await pool.query(
+      'INSERT INTO api_keys (name, key_value) VALUES (?, ?)',
+      [name, key_value]
     );
     
-    connection.release();
-    
-    // Generate token
-    const token = jwt.sign(
-      { id: result.insertId, username, email },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-    
-    res.status(201).json({
-      message: 'User created successfully',
-      token,
-      user: {
-        id: result.insertId,
-        username,
-        email
-      }
+    res.status(201).json({ 
+      id: result.insertId,
+      name,
+      key_value,
+      created_at: new Date()
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating API key:', error);
+    res.status(500).json({ error: 'Error creating API key' });
   }
 });
 
-// Login route
-app.post('/api/admin/login', async (req, res) => {
+app.delete('/api/admin/api-keys/:id', authenticateToken, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { id } = req.params;
     
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT * FROM admin_users WHERE email = ?',
-      [email]
-    );
-    connection.release();
+    await pool.query('DELETE FROM api_keys WHERE id = ?', [id]);
     
-    if (rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    const user = rows[0];
-    const validPassword = await bcrypt.compare(password, user.password);
-    
-    if (!validPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    // Generate token
-    const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-    
-    res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      }
-    });
+    res.json({ message: 'API key deleted successfully' });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error deleting API key:', error);
+    res.status(500).json({ error: 'Error deleting API key' });
   }
 });
 
-// Get current user
-app.get('/api/admin/me', authenticateToken, (req, res) => {
-  res.json(req.user);
+// Check token validity
+app.get('/api/admin/check-auth', authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
-// ctrlpanel.gg API integration
-const ctrlPanelApiClient = axios.create({
-  baseURL: 'https://api.ctrlpanel.gg/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Configure ctrlpanel API key
-app.post('/api/admin/config/ctrlpanel', authenticateToken, async (req, res) => {
-  try {
-    const { apiKey } = req.body;
-    
-    // Test the API key
-    try {
-      await ctrlPanelApiClient.get('/servers', {
-        headers: { 'Authorization': `Bearer ${apiKey}` }
-      });
-    } catch (apiError) {
-      return res.status(400).json({ message: 'Invalid API key' });
-    }
-    
-    // Store API key in database
-    const connection = await pool.getConnection();
-    await connection.query(
-      'REPLACE INTO api_config (name, value) VALUES (?, ?)',
-      ['ctrlpanel_api_key', apiKey]
-    );
-    connection.release();
-    
-    res.json({ message: 'API key configured successfully' });
-  } catch (error) {
-    console.error('Error configuring API key:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get ctrlpanel servers count
+// CtrlPanel API proxy endpoints
 app.get('/api/ctrlpanel/servers/count', authenticateToken, async (req, res) => {
   try {
-    // Get API key from database
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT value FROM api_config WHERE name = ?',
-      ['ctrlpanel_api_key']
-    );
-    connection.release();
+    const [keys] = await pool.query('SELECT key_value FROM api_keys LIMIT 1');
     
-    if (rows.length === 0) {
-      return res.status(400).json({ message: 'API key not configured' });
+    if (keys.length === 0) {
+      return res.status(404).json({ error: 'No API keys found' });
     }
     
-    const apiKey = rows[0].value;
-    
-    // Call ctrlpanel API
-    const response = await ctrlPanelApiClient.get('/servers', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    });
-    
-    res.json({ count: response.data.length });
+    // Mock response for now - in production, this would make an API call to CtrlPanel
+    res.json({ count: 42 });
   } catch (error) {
-    console.error('Error getting servers count:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching servers count:', error);
+    res.status(500).json({ error: 'Error fetching servers count' });
   }
 });
 
-// Get ctrlpanel users count
 app.get('/api/ctrlpanel/users/count', authenticateToken, async (req, res) => {
   try {
-    // Get API key from database
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT value FROM api_config WHERE name = ?',
-      ['ctrlpanel_api_key']
-    );
-    connection.release();
+    const [keys] = await pool.query('SELECT key_value FROM api_keys LIMIT 1');
     
-    if (rows.length === 0) {
-      return res.status(400).json({ message: 'API key not configured' });
+    if (keys.length === 0) {
+      return res.status(404).json({ error: 'No API keys found' });
     }
     
-    const apiKey = rows[0].value;
-    
-    // Call ctrlpanel API
-    const response = await ctrlPanelApiClient.get('/users', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    });
-    
-    res.json({ count: response.data.length });
+    // Mock response for now - in production, this would make an API call to CtrlPanel
+    res.json({ count: 128 });
   } catch (error) {
-    console.error('Error getting users count:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching users count:', error);
+    res.status(500).json({ error: 'Error fetching users count' });
   }
 });
 
-// Get ctrlpanel server stats
 app.get('/api/ctrlpanel/servers/stats', authenticateToken, async (req, res) => {
   try {
-    // Get API key from database
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT value FROM api_config WHERE name = ?',
-      ['ctrlpanel_api_key']
-    );
-    connection.release();
+    const [keys] = await pool.query('SELECT key_value FROM api_keys LIMIT 1');
     
-    if (rows.length === 0) {
-      return res.status(400).json({ message: 'API key not configured' });
+    if (keys.length === 0) {
+      return res.status(404).json({ error: 'No API keys found' });
     }
     
-    const apiKey = rows[0].value;
-    
-    // Call ctrlpanel API
-    const response = await ctrlPanelApiClient.get('/servers', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    });
-    
-    // Calculate stats
-    let active = 0;
-    let offline = 0;
-    
-    response.data.forEach(server => {
-      if (server.status === 'online' || server.status === 'active') {
-        active++;
-      } else {
-        offline++;
+    // Mock response for now - in production, this would make an API call to CtrlPanel
+    res.json({
+      online: 35,
+      offline: 7,
+      suspended: 3,
+      total: 45,
+      serverTypes: {
+        minecraft: 25,
+        valheim: 8,
+        rust: 5,
+        csgo: 4,
+        ark: 3
       }
     });
-    
-    res.json({ active, offline });
   } catch (error) {
-    console.error('Error getting server stats:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching server stats:', error);
+    res.status(500).json({ error: 'Error fetching server stats' });
   }
 });
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve API requests
+  // Serve static files from the dist directory
+  app.use(express.static(path.join(__dirname, '../dist')));
+  
+  // Handle API routes
   app.use('/api', (req, res, next) => {
-    if (req.url.startsWith('/api')) {
-      next();
-    } else {
-      express.static(path.join(__dirname, '../dist'))(req, res, next);
-    }
+    next();
   });
   
-  // Serve the frontend for all other routes
+  // Serve the frontend for all other routes (SPA support)
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
   });
 }
 
-// Start server
-async function startServer() {
-  await initializeDatabase();
-  
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

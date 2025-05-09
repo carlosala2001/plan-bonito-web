@@ -17,6 +17,11 @@ const Index = () => {
     }
   };
 
+  // Ensure the component is properly mounted
+  React.useEffect(() => {
+    console.log("Index component mounted");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
