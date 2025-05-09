@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import PlanCard, { Plan } from "./PlanCard";
+import PlanCard from "./PlanCard";
 import { plansData } from "@/data/plans";
 import { cn } from "@/lib/utils"; 
 import { useIsMobile } from "@/hooks/use-mobile";
