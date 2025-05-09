@@ -27,9 +27,17 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# Install dependencies
-echo "Installing npm dependencies..."
+# Install frontend dependencies
+echo "Installing frontend dependencies..."
 npm install
+
+# Install server dependencies
+echo "Installing server dependencies..."
+cd server && npm install && cd ..
+
+# Build the project for production
+echo "Building project for production..."
+npm run build
 
 # Create .env file if it doesn't exist
 if [ ! -f .env ]; then
