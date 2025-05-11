@@ -32,7 +32,7 @@ const PanelPreview: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30 dark:bg-slate-900">
+    <section id="panel-preview" className="py-16 md:py-24 bg-muted/30 dark:bg-slate-900">
       <div className="container mx-auto px-4">
         <div className="mb-10 text-center">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">Echa un vistazo</h2>
@@ -46,6 +46,7 @@ const PanelPreview: React.FC = () => {
           <Tabs 
             defaultValue="file-manager" 
             className="w-full"
+            value={activeTab}
             onValueChange={(value) => setActiveTab(value)}
           >
             <div className="flex justify-center mb-8">
@@ -55,11 +56,12 @@ const PanelPreview: React.FC = () => {
                     key={tab.id}
                     value={tab.id}
                     className={cn(
-                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-500",
+                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-300",
                       activeTab === tab.id 
                         ? "bg-gradient-zenoscale text-white shadow-md font-medium" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
+                    onClick={() => setActiveTab(tab.id)}
                   >
                     <span className={cn(
                       "flex items-center transition-all duration-300",
@@ -73,27 +75,29 @@ const PanelPreview: React.FC = () => {
               </TabsList>
             </div>
 
-            {tabs.map((tab) => (
-              <TabsContent 
-                key={tab.id} 
-                value={tab.id}
-                className="mt-0 rounded-xl overflow-hidden border shadow-lg transition-all duration-500 transform"
-              >
-                <div className="relative overflow-hidden rounded-xl bg-card">
-                  <div className={cn(
-                    "transition-all duration-700 transform",
-                    activeTab === tab.id ? "scale-100 opacity-100" : "scale-95 opacity-0"
-                  )}>
+            <div className="relative overflow-hidden rounded-xl border shadow-lg bg-card">
+              {tabs.map((tab) => (
+                <TabsContent 
+                  key={tab.id} 
+                  value={tab.id}
+                  className={cn(
+                    "absolute inset-0 transition-all duration-500 transform",
+                    activeTab === tab.id 
+                      ? "opacity-100 translate-x-0" 
+                      : "opacity-0 translate-x-8 pointer-events-none"
+                  )}
+                >
+                  <div className="relative w-full h-full">
                     <img 
                       src={tab.image}
                       alt={tab.alt}
-                      className="w-full h-full object-cover"
+                      className="w-full object-cover"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"></div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"></div>
-                </div>
-              </TabsContent>
-            ))}
+                </TabsContent>
+              ))}
+            </div>
           </Tabs>
         </div>
       </div>
