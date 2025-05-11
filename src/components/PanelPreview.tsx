@@ -1,11 +1,22 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileIcon, MonitorIcon, ServerIcon } from "lucide-react";
 
 const PanelPreview: React.FC = () => {
   const [activeTab, setActiveTab] = useState("file-manager");
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // Set loaded to true after component mounts for animation purposes
+    setLoaded(true);
+    
+    // Cleanup function
+    return () => {
+      setLoaded(false);
+    };
+  }, []);
 
   const tabs = [
     {
@@ -47,7 +58,7 @@ const PanelPreview: React.FC = () => {
             defaultValue="file-manager" 
             className="w-full"
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value)}
+            onValueChange={setActiveTab}
           >
             <div className="flex justify-center mb-8">
               <TabsList className="grid grid-cols-3 sm:grid-cols-3 md:min-w-[500px] p-1 bg-card dark:bg-slate-800/60 rounded-full shadow-md">
@@ -56,15 +67,14 @@ const PanelPreview: React.FC = () => {
                     key={tab.id}
                     value={tab.id}
                     className={cn(
-                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-300",
+                      "rounded-full flex items-center justify-center px-6 py-3 transition-colors duration-300",
                       activeTab === tab.id 
                         ? "bg-gradient-zenoscale text-white shadow-md font-medium" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
-                    onClick={() => setActiveTab(tab.id)}
                   >
                     <span className={cn(
-                      "flex items-center transition-all duration-300",
+                      "flex items-center transition-all duration-200",
                       activeTab === tab.id ? "scale-105" : ""
                     )}>
                       {tab.icon}
@@ -75,25 +85,31 @@ const PanelPreview: React.FC = () => {
               </TabsList>
             </div>
 
-            <div className="relative overflow-hidden rounded-xl border shadow-lg bg-card">
+            <div className="relative bg-card rounded-xl border shadow-lg overflow-hidden" style={{ height: "450px" }}>
               {tabs.map((tab) => (
                 <TabsContent 
                   key={tab.id} 
                   value={tab.id}
                   className={cn(
-                    "absolute inset-0 transition-all duration-500 transform",
+                    "absolute inset-0 transition-all duration-400 transform",
                     activeTab === tab.id 
                       ? "opacity-100 translate-x-0" 
-                      : "opacity-0 translate-x-8 pointer-events-none"
+                      : tab.id > tabs.find(t => t.id === activeTab)?.id
+                        ? "opacity-0 translate-x-16 pointer-events-none" 
+                        : "opacity-0 translate-x-[-4rem] pointer-events-none"
                   )}
+                  style={{ willChange: "transform, opacity" }}
                 >
-                  <div className="relative w-full h-full">
+                  <div className="w-full h-full">
                     <img 
                       src={tab.image}
                       alt={tab.alt}
-                      className="w-full object-cover"
+                      className="w-full h-full object-contain"
+                      style={{ 
+                        transition: "transform 0.3s ease",
+                        transform: "scale(1)" 
+                      }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"></div>
                   </div>
                 </TabsContent>
               ))}
