@@ -5,6 +5,8 @@ import PlanComparison from "@/components/PlanComparison";
 import AboutZenoScale from "@/components/AboutZenoScale";
 import SupportedGames from "@/components/SupportedGames";
 import StatisticsSection from "@/components/StatisticsSection";
+import GlobalMap from "@/components/GlobalMap";
+import PanelPreview from "@/components/PanelPreview";
 import Navbar from "@/components/Navbar";
 import { ChevronDownIcon, RocketIcon, ServerIcon, ShieldIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -116,6 +118,9 @@ const Index = () => {
       {/* Statistics Section */}
       <StatisticsSection />
 
+      {/* Global Map Section */}
+      <GlobalMap />
+
       {/* Plans Carousel Section */}
       <section id="planes" className="py-12 md:py-16">
         <div className="container mx-auto px-4">
@@ -133,6 +138,9 @@ const Index = () => {
       
       {/* Supported Games Section */}
       <SupportedGames />
+
+      {/* Panel Preview Section - New section */}
+      <PanelPreview />
 
       {/* About ZenoScale Section */}
       <AboutZenoScale />
