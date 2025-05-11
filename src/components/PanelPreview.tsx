@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileIcon, MonitorIcon, ServerIcon, UsersIcon } from "lucide-react";
+import { FileIcon, MonitorIcon, ServerIcon } from "lucide-react";
 
 const PanelPreview: React.FC = () => {
   const [activeTab, setActiveTab] = useState("file-manager");
@@ -23,11 +23,11 @@ const PanelPreview: React.FC = () => {
       alt: "Consola web de ZenoScale"
     },
     {
-      id: "panel-preview",
-      label: "Panel Preview",
+      id: "dash-preview",
+      label: "Dash Preview",
       icon: <ServerIcon className="h-4 w-4 mr-2" />,
-      image: "/lovable-uploads/3603b7df-bdce-4d0e-9faf-3144a49fd7a5.png",
-      alt: "Vista previa del panel de ZenoScale"
+      image: "/lovable-uploads/21f7dd5b-e882-4e40-868c-272dd661e086.png",
+      alt: "Vista previa del dashboard de ZenoScale"
     }
   ];
 
@@ -55,14 +55,19 @@ const PanelPreview: React.FC = () => {
                     key={tab.id}
                     value={tab.id}
                     className={cn(
-                      "rounded-full flex items-center justify-center px-6 py-3 transition-all",
+                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-300",
                       activeTab === tab.id 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-gradient-zenoscale text-white shadow-md" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
-                    {tab.icon}
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className={cn(
+                      "transition-all duration-300",
+                      activeTab === tab.id ? "scale-105" : ""
+                    )}>
+                      {tab.icon}
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -72,15 +77,20 @@ const PanelPreview: React.FC = () => {
               <TabsContent 
                 key={tab.id} 
                 value={tab.id}
-                className="mt-0 rounded-lg overflow-hidden border shadow-lg transition-all"
+                className="mt-0 rounded-xl overflow-hidden border shadow-lg transition-all duration-500 transform"
               >
-                <div className="relative overflow-hidden rounded-lg bg-card">
-                  <img 
-                    src={tab.image}
-                    alt={tab.alt}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/5 to-transparent pointer-events-none"></div>
+                <div className="relative overflow-hidden rounded-xl bg-card">
+                  <div className={cn(
+                    "transition-all duration-700 transform",
+                    activeTab === tab.id ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                  )}>
+                    <img 
+                      src={tab.image}
+                      alt={tab.alt}
+                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"></div>
                 </div>
               </TabsContent>
             ))}
