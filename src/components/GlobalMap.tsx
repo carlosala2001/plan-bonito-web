@@ -15,57 +15,83 @@ const GlobalMap: React.FC = () => {
         
         <div className="mx-auto max-w-5xl relative rounded-lg overflow-hidden shadow-lg">
           <div className="aspect-[16/9] bg-slate-900 relative">
-            {/* Mapa estilizado */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-800 z-0">
-              {/* Líneas del mapa */}
-              <svg className="w-full h-full opacity-20" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,225 C133,125 266,325 400,225 C533,125 666,325 800,225" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,200 C133,100 266,300 400,200 C533,100 666,300 800,200" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,250 C133,150 266,350 400,250 C533,150 666,350 800,250" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,175 C133,75 266,275 400,175 C533,75 666,275 800,175" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,275 C133,175 266,375 400,275 C533,175 666,375 800,275" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,150 C133,50 266,250 400,150 C533,50 666,250 800,150" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-                <path d="M0,300 C133,200 266,400 400,300 C533,200 666,400 800,300" stroke="rgba(123,108,246,0.5)" strokeWidth="0.5" fill="none" />
-              </svg>
+            {/* Fondo del mapa */}
+            <div className="absolute inset-0 bg-slate-900 z-0"></div>
+
+            {/* Mapa Mundial con Puntos */}
+            <svg className="w-full h-full absolute inset-0" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+              {/* Rejilla para profundidad */}
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(115, 185, 255, 0.1)" strokeWidth="0.5" />
+              </pattern>
+              <rect width="1000" height="500" fill="url(#grid)" />
+
+              {/* Continentes estilizados en el color zenoscale blue */}
+              <g fill="#73B9FF" opacity="0.3">
+                {/* América del Norte */}
+                <path d="M 150 80 C 180 70, 220 100, 210 150 C 200 200, 150 220, 130 250 C 110 280, 100 320, 120 350 L 200 350 L 230 270 L 280 230 L 250 150 L 220 120 L 190 100 Z" />
+                
+                {/* América del Sur */}
+                <path d="M 200 350 C 220 380, 250 400, 260 440 L 280 460 L 300 440 L 310 400 L 290 370 L 270 350 L 230 340 Z" />
+                
+                {/* Europa */}
+                <path d="M 420 100 C 450 90, 480 110, 490 140 C 500 170, 480 200, 460 220 C 440 240, 430 260, 450 280 L 480 290 L 500 270 L 520 250 L 540 230 L 530 200 L 510 170 L 500 150 L 480 120 Z" />
+                
+                {/* África */}
+                <path d="M 450 280 C 470 290, 490 310, 500 340 C 510 370, 520 400, 510 430 L 490 450 L 470 430 L 450 410 L 430 390 L 420 360 L 410 330 L 430 300 Z" />
+                
+                {/* Asia */}
+                <path d="M 540 100 C 570 90, 600 100, 630 120 C 660 140, 690 160, 720 190 C 750 220, 780 250, 770 290 C 760 330, 730 350, 700 330 C 670 310, 650 280, 620 260 C 590 240, 560 220, 540 200 L 520 180 L 510 150 Z" />
+                
+                {/* Oceanía */}
+                <path d="M 750 320 C 780 310, 810 330, 840 350 C 870 370, 890 400, 880 430 L 850 450 L 820 440 L 790 420 L 770 390 L 760 360 Z" />
+              </g>
+
+              {/* Puntos de ubicación */}
+              {/* Norteamérica */}
+              <circle cx="180" cy="200" r="8" fill="white" className="pulse-circle">
+                <animate attributeName="opacity" from="1" to="0.3" dur="2s" repeatCount="indefinite" />
+              </circle>
               
-              {/* Continentes estilizados */}
-              <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
-                {/* América */}
-                <path d="M150,100 Q170,120 160,140 Q150,160 170,180 Q190,200 180,220 Q170,240 180,260 Q190,280 200,300 Q210,320 220,340" 
-                  stroke="#73B9FF" strokeWidth="1.5" fill="none" />
-                {/* Europa y África */}
-                <path d="M400,100 Q410,120 420,140 Q430,160 420,180 Q410,200 420,220 Q430,240 440,260 Q450,280 460,300" 
-                  stroke="#73B9FF" strokeWidth="1.5" fill="none" />
-                {/* Asia y Oceanía */}
-                <path d="M550,120 Q570,140 580,160 Q590,180 600,200 Q610,220 600,240 Q590,260 600,280 Q610,300 620,320" 
-                  stroke="#73B9FF" strokeWidth="1.5" fill="none" />
-              </svg>
-            </div>
+              {/* Europa */}
+              <circle cx="480" cy="180" r="8" fill="white" className="pulse-circle">
+                <animate attributeName="opacity" from="1" to="0.3" dur="2s" repeatCount="indefinite" />
+              </circle>
+              
+              {/* Asia */}
+              <circle cx="700" cy="220" r="8" fill="white" className="pulse-circle">
+                <animate attributeName="opacity" from="1" to="0.3" dur="2s" repeatCount="indefinite" />
+              </circle>
+              
+              {/* Oceanía */}
+              <circle cx="820" cy="400" r="8" fill="white" className="pulse-circle">
+                <animate attributeName="opacity" from="1" to="0.3" dur="2s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Halos para cada ubicación */}
+              <circle cx="180" cy="200" r="12" fill="none" stroke="white" strokeWidth="1" opacity="0.5">
+                <animate attributeName="r" from="8" to="20" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="3s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="480" cy="180" r="12" fill="none" stroke="white" strokeWidth="1" opacity="0.5">
+                <animate attributeName="r" from="8" to="20" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="3s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="700" cy="220" r="12" fill="none" stroke="white" strokeWidth="1" opacity="0.5">
+                <animate attributeName="r" from="8" to="20" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="3s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="820" cy="400" r="12" fill="none" stroke="white" strokeWidth="1" opacity="0.5">
+                <animate attributeName="r" from="8" to="20" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="3s" repeatCount="indefinite" />
+              </circle>
+            </svg>
             
-            {/* Overlay para el efecto de brillo */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent z-10"></div>
-            
-            {/* Puntos de ubicación con efecto de pulso */}
-            <div className="absolute top-[30%] left-[25%] z-20">
-              <div className="h-3 w-3 bg-white rounded-full animate-pulse">
-                <div className="h-6 w-6 bg-white/30 rounded-full absolute -top-1.5 -left-1.5 animate-ping opacity-75"></div>
-              </div>
-            </div>
-            <div className="absolute top-[25%] left-[48%] z-20">
-              <div className="h-3 w-3 bg-white rounded-full animate-pulse">
-                <div className="h-6 w-6 bg-white/30 rounded-full absolute -top-1.5 -left-1.5 animate-ping opacity-75"></div>
-              </div>
-            </div>
-            <div className="absolute top-[30%] left-[73%] z-20">
-              <div className="h-3 w-3 bg-white rounded-full animate-pulse">
-                <div className="h-6 w-6 bg-white/30 rounded-full absolute -top-1.5 -left-1.5 animate-ping opacity-75"></div>
-              </div>
-            </div>
-            <div className="absolute top-[65%] left-[83%] z-20">
-              <div className="h-3 w-3 bg-white rounded-full animate-pulse">
-                <div className="h-6 w-6 bg-white/30 rounded-full absolute -top-1.5 -left-1.5 animate-ping opacity-75"></div>
-              </div>
-            </div>
+            {/* Overlay para efecto de brillo */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent z-10"></div>
           </div>
           
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900 to-transparent z-30">

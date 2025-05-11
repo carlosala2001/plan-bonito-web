@@ -49,20 +49,20 @@ const PanelPreview: React.FC = () => {
             onValueChange={(value) => setActiveTab(value)}
           >
             <div className="flex justify-center mb-8">
-              <TabsList className="grid grid-cols-3 sm:grid-cols-3 md:min-w-[500px] p-1 bg-card dark:bg-card/50 rounded-full">
+              <TabsList className="grid grid-cols-3 sm:grid-cols-3 md:min-w-[500px] p-1 bg-card dark:bg-slate-800/60 rounded-full shadow-md">
                 {tabs.map((tab) => (
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
                     className={cn(
-                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-300",
+                      "rounded-full flex items-center justify-center px-6 py-3 transition-all duration-500",
                       activeTab === tab.id 
-                        ? "bg-gradient-zenoscale text-white shadow-md" 
+                        ? "bg-gradient-zenoscale text-white shadow-md font-medium" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
                     <span className={cn(
-                      "transition-all duration-300",
+                      "flex items-center transition-all duration-300",
                       activeTab === tab.id ? "scale-105" : ""
                     )}>
                       {tab.icon}
@@ -87,7 +87,7 @@ const PanelPreview: React.FC = () => {
                     <img 
                       src={tab.image}
                       alt={tab.alt}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"></div>
