@@ -43,10 +43,15 @@ const PanelPreview: React.FC = () => {
   ];
 
   return (
-    <section id="panel-preview" className="py-16 md:py-24 bg-muted/30 dark:bg-slate-900">
-      <div className="container mx-auto px-4">
+    <section id="panel-preview" className="py-16 md:py-24 relative">
+      {/* Fondo con gradiente */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background dark:from-slate-900/80 dark:to-background"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="mb-10 text-center">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">Echa un vistazo</h2>
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+            <span className="gradient-text">Echa un vistazo</span>
+          </h2>
           <p className="mx-auto max-w-2xl text-muted-foreground">
             Ofrecemos un panel de control líder en la industria en todo el mundo.
             Velocidad, facilidad de uso, funciones y fiabilidad de primer nivel.
@@ -61,7 +66,7 @@ const PanelPreview: React.FC = () => {
             onValueChange={setActiveTab}
           >
             <div className="flex justify-center mb-8">
-              <TabsList className="grid grid-cols-3 sm:grid-cols-3 md:min-w-[500px] p-1 bg-card dark:bg-slate-800/60 rounded-full shadow-md">
+              <TabsList className="grid grid-cols-3 sm:grid-cols-3 md:min-w-[500px] p-1 bg-card/80 backdrop-blur-sm dark:bg-slate-800/60 rounded-full shadow-md">
                 {tabs.map((tab) => (
                   <TabsTrigger
                     key={tab.id}
@@ -85,7 +90,7 @@ const PanelPreview: React.FC = () => {
               </TabsList>
             </div>
 
-            <div className="relative bg-card rounded-xl border shadow-lg overflow-hidden" style={{ height: "450px" }}>
+            <div className="relative bg-card rounded-xl border shadow-lg overflow-hidden gradient-border" style={{ height: "450px" }}>
               {tabs.map((tab) => (
                 <TabsContent 
                   key={tab.id} 

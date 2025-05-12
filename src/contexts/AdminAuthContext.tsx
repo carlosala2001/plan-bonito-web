@@ -33,9 +33,9 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return;
         }
 
-        const response = await api.get('/admin/me');
+        const response = await api.get('/admin/check-auth');
         if (response.status === 200) {
-          setUser(response.data);
+          setUser(response.data.user);
         }
       } catch (error) {
         localStorage.removeItem('admin_token');
@@ -75,7 +75,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const registerFirstUser = async (email: string, username: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await api.post('/admin/register-first', { email, username, password });
+      const response = await api.post('/admin/register-first-user', { email, username, password });
       if (response.data.token) {
         localStorage.setItem('admin_token', response.data.token);
         setUser(response.data.user);

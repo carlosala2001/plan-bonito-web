@@ -61,8 +61,6 @@ const AdminLogin: React.FC = () => {
       } catch (error) {
         console.error('Error checking first user:', error);
         setApiError('No se pudo conectar con el servidor. Asegúrate de que el servidor backend esté en ejecución.');
-        // Default to first user if server is unavailable (helps with first setup)
-        setIsFirstUser(true);
       } finally {
         setIsCheckingFirstUser(false);
       }
@@ -98,22 +96,28 @@ const AdminLogin: React.FC = () => {
 
   if (isCheckingFirstUser) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-lg">Cargando...</p>
+      <div className="flex h-screen items-center justify-center bg-gradient-to-b from-muted/30 to-background dark:from-slate-900/80 dark:to-background">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="text-lg">Verificando conexión...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{isFirstUser ? 'Registro de administrador' : 'Iniciar sesión'}</CardTitle>
-          <CardDescription>
-            {isFirstUser 
-              ? 'Crea tu cuenta de administrador para comenzar' 
-              : 'Introduce tus credenciales para acceder al panel de administración'}
-          </CardDescription>
+    <div className="flex h-screen items-center justify-center bg-gradient-to-b from-muted/30 to-background dark:from-slate-900/80 dark:to-background">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-zenoscale opacity-10"></div>
+          <div className="relative z-10">
+            <CardTitle className="text-2xl">{isFirstUser ? 'Registro de administrador' : 'Iniciar sesión'}</CardTitle>
+            <CardDescription>
+              {isFirstUser 
+                ? 'Crea tu cuenta de administrador para comenzar' 
+                : 'Introduce tus credenciales para acceder al panel de administración'}
+            </CardDescription>
+          </div>
           
           {apiError && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center gap-2 text-yellow-700">
@@ -160,7 +164,7 @@ const AdminLogin: React.FC = () => {
                   required 
                 />
               </div>
-              <Button type="submit" className="w-full">Registrarse</Button>
+              <Button type="submit" className="w-full bg-gradient-zenoscale hover:brightness-105 transition-all">Registrarse</Button>
             </form>
           ) : (
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
@@ -182,11 +186,11 @@ const AdminLogin: React.FC = () => {
                   required 
                 />
               </div>
-              <Button type="submit" className="w-full">Iniciar sesión</Button>
+              <Button type="submit" className="w-full bg-gradient-zenoscale hover:brightness-105 transition-all">Iniciar sesión</Button>
             </form>
           )}
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center border-t pt-4">
           <p className="text-sm text-muted-foreground">
             Panel de administración ZenoScale
           </p>
