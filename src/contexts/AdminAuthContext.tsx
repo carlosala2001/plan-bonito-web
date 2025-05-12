@@ -34,8 +34,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         const response = await api.get('/admin/check-auth');
-        if (response.status === 200) {
-          setUser(response.data.user);
+        if (response.status === 200 && response.data.user) {
+          setUser({
+            id: response.data.user.id,
+            username: response.data.user.username,
+            email: response.data.user.email
+          });
         }
       } catch (error) {
         localStorage.removeItem('admin_token');
@@ -52,14 +56,18 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsLoading(true);
     try {
       const response = await api.post('/admin/login', { email, password });
-      if (response.data.token) {
+      if (response.data.token && response.data.user) {
         localStorage.setItem('admin_token', response.data.token);
         setUser(response.data.user);
         toast.success('Inicio de sesión exitoso');
+        return response.data.user;
+      } else {
+        throw new Error('Invalid response format');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Error de inicio de sesión');
+      const errorMessage = error.response?.data?.error || 'Error de inicio de sesión';
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -78,12 +86,19 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const response = await api.post('/admin/register-first-user', { email, username, password });
       if (response.data.token) {
         localStorage.setItem('admin_token', response.data.token);
-        setUser(response.data.user);
+        setUser({
+          id: response.data.user?.id || 0,
+          username: response.data.user?.username || username,
+          email: response.data.user?.email || email
+        });
         toast.success('Registro exitoso');
+      } else {
+        throw new Error('Invalid response format');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Error de registro');
+      const errorMessage = error.response?.data?.error || 'Error de registro';
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);

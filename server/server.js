@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -28,7 +27,9 @@ const pool = mysql.createPool({
 // Setup the database
 async function setupDatabase() {
   try {
+    console.log('Attempting to connect to database...');
     const connection = await pool.getConnection();
+    console.log('Database connection successful');
     
     // Create users table if not exists
     await connection.query(`
@@ -51,10 +52,25 @@ async function setupDatabase() {
       )
     `);
     
+    // Create nodes table if not exists
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS nodes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        location VARCHAR(100) NOT NULL,
+        latitude FLOAT NOT NULL,
+        longitude FLOAT NOT NULL,
+        status VARCHAR(20) DEFAULT 'unknown',
+        last_check TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     connection.release();
     console.log('Database setup completed successfully');
   } catch (error) {
     console.error('Error setting up database:', error);
+    process.exit(1); // Exit if database connection fails
   }
 }
 
@@ -237,6 +253,79 @@ app.delete('/api/admin/api-keys/:id', authenticateToken, async (req, res) => {
 // Check token validity
 app.get('/api/admin/check-auth', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
+});
+
+// Nodes management endpoints
+app.get('/api/admin/nodes', authenticateToken, async (req, res) => {
+  try {
+    const [nodes] = await pool.query('SELECT * FROM nodes ORDER BY name');
+    res.json(nodes);
+  } catch (error) {
+    console.error('Error fetching nodes:', error);
+    res.status(500).json({ error: 'Error fetching nodes' });
+  }
+});
+
+app.post('/api/admin/nodes', authenticateToken, async (req, res) => {
+  try {
+    const { name, location, latitude, longitude } = req.body;
+    
+    if (!name || !location || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    const [result] = await pool.query(
+      'INSERT INTO nodes (name, location, latitude, longitude) VALUES (?, ?, ?, ?)',
+      [name, location, latitude, longitude]
+    );
+    
+    res.status(201).json({ 
+      id: result.insertId,
+      name,
+      location,
+      latitude,
+      longitude,
+      status: 'unknown',
+      created_at: new Date()
+    });
+  } catch (error) {
+    console.error('Error creating node:', error);
+    res.status(500).json({ error: 'Error creating node' });
+  }
+});
+
+app.delete('/api/admin/nodes/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await pool.query('DELETE FROM nodes WHERE id = ?', [id]);
+    
+    res.json({ message: 'Node deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting node:', error);
+    res.status(500).json({ error: 'Error deleting node' });
+  }
+});
+
+app.put('/api/admin/nodes/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+    
+    await pool.query(
+      'UPDATE nodes SET status = ?, last_check = NOW() WHERE id = ?',
+      [status, id]
+    );
+    
+    res.json({ message: 'Node status updated successfully' });
+  } catch (error) {
+    console.error('Error updating node status:', error);
+    res.status(500).json({ error: 'Error updating node status' });
+  }
 });
 
 // Public endpoints for statistics - no auth required
