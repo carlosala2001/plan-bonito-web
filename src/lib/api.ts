@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { toast } from "sonner";
 
@@ -165,6 +166,48 @@ export const ctrlPanelApi = {
       console.error('Error updating node status:', error);
       throw error;
     }
+  },
+  
+  // HetrixTools API settings
+  getHetrixToolsSettings: async () => {
+    try {
+      const response = await api.get('/admin/hetrixtools-settings');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching HetrixTools settings:', error);
+      throw error;
+    }
+  },
+  
+  saveHetrixToolsApiKey: async (apiKey: string) => {
+    try {
+      const response = await api.post('/admin/hetrixtools-settings', { apiKey });
+      toast.success('Clave API de HetrixTools guardada correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error saving HetrixTools API Key:', error);
+      throw error;
+    }
+  },
+  
+  getHetrixToolsMonitors: async () => {
+    try {
+      const response = await api.get('/admin/hetrixtools/monitors');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching HetrixTools monitors:', error);
+      throw error;
+    }
+  },
+  
+  getNodesStatus: async () => {
+    try {
+      const response = await api.get('/admin/nodes/status');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching nodes status:', error);
+      throw error;
+    }
   }
 };
 
@@ -189,30 +232,27 @@ export const publicApi = {
       console.error('Error fetching public users count:', error);
       throw error;
     }
+  },
+  
+  // Get public nodes status for the world map
+  getNodesStatus: async () => {
+    try {
+      const response = await api.get('/public/nodes/status');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching public nodes status:', error);
+      throw error;
+    }
   }
 };
 
-// HetrixTools API (would be implemented in production)
+// HetrixTools API integration
 export const hetrixToolsApi = {
-  // In production this would make real API calls to HetrixTools
-  // For now it returns mock data
-  getNodesStatus: async (apiKey: string) => {
+  getNodesStatus: async () => {
     try {
-      // In production this would be a real API call
-      // const response = await axios.get('https://api.hetrixtools.com/v2/monitors/', {
-      //   headers: { Authorization: `Bearer ${apiKey}` }
-      // });
-      // return response.data;
-      
-      // Mock data
-      return {
-        nodes: [
-          { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
-          { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
-          { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
-          { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "maintenance" },
-        ]
-      };
+      // We're using our server as a proxy to HetrixTools API
+      const response = await api.get('/admin/nodes/status');
+      return response.data;
     } catch (error) {
       console.error('Error fetching HetrixTools data:', error);
       throw error;

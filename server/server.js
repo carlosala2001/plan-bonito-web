@@ -1,9 +1,11 @@
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
@@ -16,6 +18,7 @@ app.use(express.json());
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'zenoscale_admin',
@@ -63,6 +66,16 @@ async function setupDatabase() {
         status VARCHAR(20) DEFAULT 'unknown',
         last_check TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create hetrixtools_settings table if not exists
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS hetrixtools_settings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        api_key VARCHAR(255) NOT NULL,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
       )
     `);
     
@@ -201,6 +214,73 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// HetrixTools API Settings endpoints
+app.get('/api/admin/hetrixtools-settings', authenticateToken, async (req, res) => {
+  try {
+    const [settings] = await pool.query('SELECT * FROM hetrixtools_settings ORDER BY id DESC LIMIT 1');
+    
+    if (settings.length === 0) {
+      return res.json({ apiKey: '', isConfigured: false });
+    }
+    
+    const setting = settings[0];
+    // Mask the API key for security
+    const maskedApiKey = setting.api_key ? `${setting.api_key.substring(0, 4)}${'*'.repeat(setting.api_key.length - 8)}${setting.api_key.substring(setting.api_key.length - 4)}` : '';
+    
+    res.json({
+      id: setting.id,
+      apiKey: maskedApiKey,
+      isConfigured: !!setting.api_key,
+      isActive: setting.is_active,
+      lastUpdated: setting.last_updated
+    });
+  } catch (error) {
+    console.error('Error fetching HetrixTools settings:', error);
+    res.status(500).json({ error: 'Error fetching HetrixTools settings' });
+  }
+});
+
+app.post('/api/admin/hetrixtools-settings', authenticateToken, async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    
+    if (!apiKey) {
+      return res.status(400).json({ error: 'API Key is required' });
+    }
+    
+    // Test HetrixTools API connection before saving
+    try {
+      // Validate the API key by making a test call
+      const response = await axios.get('https://api.hetrixtools.com/v1/uptime/monitors/', {
+        params: {
+          token: apiKey,
+        }
+      });
+      
+      if (response.status !== 200) {
+        return res.status(400).json({ error: 'Invalid HetrixTools API Key' });
+      }
+    } catch (error) {
+      console.error('Error validating HetrixTools API Key:', error);
+      return res.status(400).json({ error: 'Invalid HetrixTools API Key' });
+    }
+    
+    // If validation passed, save the API key
+    const [result] = await pool.query(
+      'INSERT INTO hetrixtools_settings (api_key) VALUES (?) ON DUPLICATE KEY UPDATE api_key = VALUES(api_key), last_updated = CURRENT_TIMESTAMP',
+      [apiKey]
+    );
+    
+    res.status(201).json({ 
+      message: 'HetrixTools API Key saved successfully',
+      isConfigured: true
+    });
+  } catch (error) {
+    console.error('Error saving HetrixTools API Key:', error);
+    res.status(500).json({ error: 'Error saving HetrixTools API Key' });
+  }
+});
+
 // API Key management endpoints
 app.get('/api/admin/api-keys', authenticateToken, async (req, res) => {
   try {
@@ -325,6 +405,119 @@ app.put('/api/admin/nodes/:id/status', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating node status:', error);
     res.status(500).json({ error: 'Error updating node status' });
+  }
+});
+
+// HetrixTools API endpoints
+app.get('/api/admin/hetrixtools/monitors', authenticateToken, async (req, res) => {
+  try {
+    // Get HetrixTools API key
+    const [settings] = await pool.query('SELECT api_key FROM hetrixtools_settings WHERE is_active = 1 ORDER BY id DESC LIMIT 1');
+    
+    if (settings.length === 0 || !settings[0].api_key) {
+      return res.status(404).json({ error: 'HetrixTools API key not configured' });
+    }
+    
+    const apiKey = settings[0].api_key;
+    
+    try {
+      // Call HetrixTools API
+      const response = await axios.get('https://api.hetrixtools.com/v1/uptime/monitors/', {
+        params: {
+          token: apiKey
+        }
+      });
+      
+      // Return the monitor data
+      res.json(response.data);
+    } catch (error) {
+      console.error('Error fetching data from HetrixTools API:', error);
+      res.status(500).json({ error: 'Error fetching data from HetrixTools API' });
+    }
+  } catch (error) {
+    console.error('Error processing HetrixTools monitors request:', error);
+    res.status(500).json({ error: 'Server error processing HetrixTools request' });
+  }
+});
+
+// Endpoint to get node status from HetrixTools
+app.get('/api/admin/nodes/status', authenticateToken, async (req, res) => {
+  try {
+    // Get HetrixTools API key
+    const [settings] = await pool.query('SELECT api_key FROM hetrixtools_settings WHERE is_active = 1 ORDER BY id DESC LIMIT 1');
+    
+    if (settings.length === 0 || !settings[0].api_key) {
+      return res.status(404).json({ error: 'HetrixTools API key not configured' });
+    }
+    
+    const apiKey = settings[0].api_key;
+    
+    try {
+      // Get nodes from database
+      const [nodes] = await pool.query('SELECT * FROM nodes');
+      
+      // Call HetrixTools API to get monitor status
+      const response = await axios.get('https://api.hetrixtools.com/v1/uptime/monitors/', {
+        params: {
+          token: apiKey
+        }
+      });
+      
+      // Map HetrixTools data to our nodes
+      // This is a simplified example and would need to be customized based on your specific setup
+      const monitorsData = response.data;
+      const updatedNodes = nodes.map(node => {
+        // Find corresponding monitor in HetrixTools data
+        // This assumes your monitors in HetrixTools have a name that matches the node name
+        const monitor = monitorsData.find(m => m.name.includes(node.name) || node.name.includes(m.name));
+        
+        if (monitor) {
+          // Determine status based on HetrixTools status
+          let status = 'unknown';
+          if (monitor.status === 'up') {
+            status = 'online';
+          } else if (monitor.status === 'down') {
+            status = 'offline';
+          } else if (monitor.status === 'maintenance') {
+            status = 'maintenance';
+          }
+          
+          // Update node status in database
+          pool.query(
+            'UPDATE nodes SET status = ?, last_check = NOW() WHERE id = ?',
+            [status, node.id]
+          );
+          
+          return { ...node, status };
+        }
+        
+        return node;
+      });
+      
+      res.json(updatedNodes);
+    } catch (error) {
+      console.error('Error fetching data from HetrixTools API:', error);
+      res.status(500).json({ error: 'Error fetching data from HetrixTools API' });
+    }
+  } catch (error) {
+    console.error('Error processing nodes status request:', error);
+    res.status(500).json({ error: 'Server error processing nodes status request' });
+  }
+});
+
+// Public endpoint to get node status for the world map
+app.get('/api/public/nodes/status', async (req, res) => {
+  try {
+    const [nodes] = await pool.query(`
+      SELECT id, name, location, latitude, longitude, status, last_check
+      FROM nodes
+      ORDER BY name
+    `);
+    
+    res.json(nodes);
+  } catch (error) {
+    console.error('Error fetching public node status:', error);
+    res.status(500).json({ error: 'Error fetching node status' });
   }
 });
 

@@ -48,7 +48,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
   return (
     <Card className={plan.highlight ? "plan-card-highlight" : "plan-card"}>
       {plan.highlight && (
-        <div className="absolute -top-3 left-0 right-0 mx-auto w-max px-6 py-1.5 rounded-full bg-gradient-zenoscale text-center text-xs font-semibold text-white shadow-md">
+        <div className="absolute -top-4 left-0 right-0 mx-auto w-max px-6 py-1.5 rounded-full bg-gradient-zenoscale text-center text-xs font-semibold text-white shadow-md">
           Recomendado
         </div>
       )}

@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { GlobeIcon, Circle } from "lucide-react";
+import { publicApi } from "@/lib/api";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface Node {
   id: number;
@@ -9,32 +11,38 @@ interface Node {
   latitude: number;
   longitude: number;
   status: string;
+  last_check?: string;
 }
 
 const GlobalMap: React.FC = () => {
-  const [nodes, setNodes] = useState<Node[]>([
-    { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
-    { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
-    { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
-    { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "online" },
-  ]);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
 
-  // For production, this would fetch real data from HetrixTools API
   useEffect(() => {
-    // This would be replaced with an actual API call in production
-    // const fetchNodeStatus = async () => {
-    //   try {
-    //     const response = await fetch('/api/admin/nodes/status');
-    //     const data = await response.json();
-    //     setNodes(data);
-    //   } catch (error) {
-    //     console.error('Error fetching node status:', error);
-    //   }
-    // };
-    // 
-    // fetchNodeStatus();
-    // const interval = setInterval(fetchNodeStatus, 60000);
-    // return () => clearInterval(interval);
+    const fetchNodeStatus = async () => {
+      try {
+        setLoading(true);
+        const data = await publicApi.getNodesStatus();
+        setNodes(data);
+      } catch (error) {
+        console.error('Error fetching node status:', error);
+        // Fallback to sample data if API fails
+        setNodes([
+          { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
+          { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
+          { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
+          { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "online" },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNodeStatus();
+    const interval = setInterval(fetchNodeStatus, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Function to get status color
@@ -55,7 +63,10 @@ const GlobalMap: React.FC = () => {
     <section className="py-12 md:py-16 bg-muted/30 dark:bg-slate-900">
       <div className="container mx-auto px-4">
         <div className="mb-8 text-center">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl bg-clip-text text-transparent bg-gradient-zenoscale">Nuestras Ubicaciones</h2>
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+            <span className="text-foreground">Nuestras </span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7B6CF6] to-[#73B9FF]">Ubicaciones</span>
+          </h2>
           <p className="mx-auto max-w-2xl text-muted-foreground">
             ZenoScale crece y amplía constantemente su lista de ubicaciones, lo que garantiza que podamos atender a usuarios de todo el mundo con la mejor experiencia posible.
           </p>
@@ -63,79 +74,91 @@ const GlobalMap: React.FC = () => {
         
         <div className="mx-auto max-w-5xl relative rounded-lg overflow-hidden shadow-lg">
           <div className="aspect-[16/9] bg-slate-900 relative">
-            {/* Fondo del mapa con efecto de profundidad */}
+            {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-0"></div>
 
             {/* Grid lines */}
             <div className="absolute inset-0 z-0">
               <svg className="w-full h-full" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
                 <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(115, 185, 255, 0.05)" strokeWidth="0.5"/>
+                  <path 
+                    d="M 20 0 L 0 0 0 20" 
+                    fill="none" 
+                    stroke={isDarkMode ? "rgba(115, 185, 255, 0.08)" : "rgba(75, 85, 99, 0.08)"} 
+                    strokeWidth="0.5"
+                  />
                 </pattern>
                 <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
                   <rect width="100" height="100" fill="url(#smallGrid)"/>
-                  <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(115, 185, 255, 0.1)" strokeWidth="1"/>
+                  <path 
+                    d="M 100 0 L 0 0 0 100" 
+                    fill="none" 
+                    stroke={isDarkMode ? "rgba(115, 185, 255, 0.15)" : "rgba(75, 85, 99, 0.15)"} 
+                    strokeWidth="1"
+                  />
                 </pattern>
                 <rect width="1000" height="500" fill="url(#grid)" />
               </svg>
             </div>
 
-            {/* Mapa Mundial con Continentes */}
+            {/* World Map */}
             <svg className="w-full h-full absolute inset-0 z-10" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
-              {/* Continentes con gradiente */}
               <defs>
                 <linearGradient id="continentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#73B9FF" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#9b87f5" stopOpacity="0.2" />
+                  <stop 
+                    offset="0%" 
+                    stopColor={isDarkMode ? "#73B9FF" : "#9b87f5"} 
+                    stopOpacity={isDarkMode ? "0.3" : "0.2"} 
+                  />
+                  <stop 
+                    offset="100%" 
+                    stopColor={isDarkMode ? "#9b87f5" : "#73B9FF"} 
+                    stopOpacity={isDarkMode ? "0.15" : "0.1"} 
+                  />
                 </linearGradient>
+                
+                {/* Glow filter for node highlights */}
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
               </defs>
 
-              <g fill="url(#continentGradient)">
-                {/* América del Norte */}
-                <path d="M 150 80 C 180 70, 220 100, 210 150 C 200 200, 150 220, 130 250 C 110 280, 100 320, 120 350 L 200 350 L 230 270 L 280 230 L 250 150 L 220 120 L 190 100 Z" />
-                
-                {/* América del Sur */}
-                <path d="M 200 350 C 220 380, 250 400, 260 440 L 280 460 L 300 440 L 310 400 L 290 370 L 270 350 L 230 340 Z" />
-                
-                {/* Europa */}
-                <path d="M 420 100 C 450 90, 480 110, 490 140 C 500 170, 480 200, 460 220 C 440 240, 430 260, 450 280 L 480 290 L 500 270 L 520 250 L 540 230 L 530 200 L 510 170 L 500 150 L 480 120 Z" />
-                
-                {/* África */}
-                <path d="M 450 280 C 470 290, 490 310, 500 340 C 510 370, 520 400, 510 430 L 490 450 L 470 430 L 450 410 L 430 390 L 420 360 L 410 330 L 430 300 Z" />
-                
-                {/* Asia */}
-                <path d="M 540 100 C 570 90, 600 100, 630 120 C 660 140, 690 160, 720 190 C 750 220, 780 250, 770 290 C 760 330, 730 350, 700 330 C 670 310, 650 280, 620 260 C 590 240, 560 220, 540 200 L 520 180 L 510 150 Z" />
-                
-                {/* Oceanía */}
-                <path d="M 750 320 C 780 310, 810 330, 840 350 C 870 370, 890 400, 880 430 L 850 450 L 820 440 L 790 420 L 770 390 L 760 360 Z" />
-              </g>
+              {/* Simplified World Map */}
+              <path 
+                d="M170,130 Q185,115,200,110 Q215,105,230,115 Q245,125,250,140 Q255,155,250,170 Q245,185,230,195 Q215,205,200,200 Q185,195,175,180 Q165,165,170,130 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M220,220 Q235,210,250,215 Q265,220,270,235 Q275,250,270,265 Q265,280,250,285 Q235,290,220,285 Q205,280,200,265 Q195,250,200,235 Q205,220,220,220 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M300,150 Q315,140,330,145 Q345,150,350,165 Q355,180,350,195 Q345,210,330,215 Q315,220,300,215 Q285,210,280,195 Q275,180,280,165 Q285,150,300,150 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M380,140 Q395,130,410,135 Q425,140,430,155 Q435,170,430,185 Q425,200,410,205 Q395,210,380,205 Q365,200,360,185 Q355,170,360,155 Q365,140,380,140 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M420,240 Q435,230,450,235 Q465,240,470,255 Q475,270,470,285 Q465,300,450,305 Q435,310,420,305 Q405,300,400,285 Q395,270,400,255 Q405,240,420,240 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M540,180 Q555,170,570,175 Q585,180,590,195 Q595,210,590,225 Q585,240,570,245 Q555,250,540,245 Q525,240,520,225 Q515,210,520,195 Q525,180,540,180 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M650,240 Q665,230,680,235 Q695,240,700,255 Q705,270,700,285 Q695,300,680,305 Q665,310,650,305 Q635,300,630,285 Q625,270,630,255 Q635,240,650,240 Z" 
+                fill="url(#continentGradient)" 
+              />
+              <path 
+                d="M750,300 Q765,290,780,295 Q795,300,800,315 Q805,330,800,345 Q795,360,780,365 Q765,370,750,365 Q735,360,730,345 Q725,330,730,315 Q735,300,750,300 Z" 
+                fill="url(#continentGradient)" 
+              />
 
-              {/* Puntos de ubicación con estados */}
-              {nodes.map((node, index) => {
-                // Convert lat/long to SVG coordinates (simple projection)
-                const x = ((node.longitude + 180) / 360) * 1000;
-                const y = ((90 - node.latitude) / 180) * 500;
-                
-                return (
-                  <g key={node.id}>
-                    {/* Halo exterior pulsante */}
-                    <circle cx={x} cy={y} r="15" fill="none" stroke={getStatusColor(node.status)} strokeWidth="1.5" opacity="0.3">
-                      <animate attributeName="r" from="15" to="25" dur="3s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" from="0.3" to="0" dur="3s" repeatCount="indefinite" />
-                    </circle>
-                    
-                    {/* Círculo de estado */}
-                    <circle cx={x} cy={y} r="8" fill={getStatusColor(node.status)} opacity="0.8">
-                      <animate attributeName="opacity" from="0.8" to="0.4" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                    
-                    {/* Punto central */}
-                    <circle cx={x} cy={y} r="4" fill="white" />
-                  </g>
-                );
-              })}
-
-              {/* Líneas de conexión entre nodos */}
+              {/* Connection lines between nodes */}
               {nodes.map((node, i) => {
                 const x1 = ((node.longitude + 180) / 360) * 1000;
                 const y1 = ((90 - node.latitude) / 180) * 500;
@@ -149,7 +172,7 @@ const GlobalMap: React.FC = () => {
                       key={`${node.id}-${targetNode.id}`}
                       d={`M ${x1} ${y1} Q ${(x1 + x2) / 2} ${Math.min(y1, y2) - 50} ${x2} ${y2}`}
                       fill="none"
-                      stroke="rgba(155, 135, 245, 0.3)"
+                      stroke={isDarkMode ? "rgba(155, 135, 245, 0.3)" : "rgba(155, 135, 245, 0.2)"}
                       strokeWidth="1"
                       strokeDasharray="5,5"
                     >
@@ -158,19 +181,72 @@ const GlobalMap: React.FC = () => {
                   );
                 });
               })}
+
+              {/* Node locations */}
+              {nodes.map((node) => {
+                // Convert lat/long to SVG coordinates
+                const x = ((node.longitude + 180) / 360) * 1000;
+                const y = ((90 - node.latitude) / 180) * 500;
+                
+                return (
+                  <g key={node.id}>
+                    {/* Outer pulse effect */}
+                    <circle 
+                      cx={x} 
+                      cy={y} 
+                      r="15" 
+                      fill="none" 
+                      stroke={getStatusColor(node.status)} 
+                      strokeWidth="1.5" 
+                      opacity="0.3"
+                    >
+                      <animate attributeName="r" from="15" to="25" dur="3s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" from="0.3" to="0" dur="3s" repeatCount="indefinite" />
+                    </circle>
+                    
+                    {/* Status indicator */}
+                    <circle 
+                      cx={x} 
+                      cy={y} 
+                      r="8" 
+                      fill={getStatusColor(node.status)} 
+                      opacity="0.8"
+                      filter="url(#glow)"
+                    >
+                      <animate attributeName="opacity" from="0.8" to="0.4" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    
+                    {/* Center point */}
+                    <circle cx={x} cy={y} r="4" fill="white" />
+                    
+                    {/* Node label */}
+                    <text 
+                      x={x} 
+                      y={y + 25} 
+                      textAnchor="middle" 
+                      fontSize="12" 
+                      fill={isDarkMode ? "white" : "#333"}
+                      className="text-xs font-medium"
+                    >
+                      {node.name}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
             
-            {/* Overlay para efecto de brillo */}
+            {/* Overlay for glow effect */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-slate-900/30 z-20"></div>
           </div>
           
+          {/* Legend */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900 to-transparent z-30">
             <div className="flex items-center text-white gap-2">
               <GlobeIcon className="h-5 w-5 text-primary" />
-              <p className="text-sm font-medium">Servidores optimizados en 4 regiones globales</p>
+              <p className="text-sm font-medium">Servidores optimizados en {nodes.length} regiones globales</p>
             </div>
             
-            {/* Leyenda de estados */}
+            {/* Status legend */}
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center gap-1.5">
                 <Circle className="h-3 w-3 fill-green-400 text-green-400" />
@@ -186,6 +262,16 @@ const GlobalMap: React.FC = () => {
               </div>
             </div>
           </div>
+          
+          {/* Loading overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-40">
+              <div className="flex flex-col items-center">
+                <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-white font-medium">Cargando datos de los servidores...</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
