@@ -68,7 +68,7 @@ JWT_SECRET=$(openssl rand -base64 32)
 echo -e "\n${BLUE}${BOLD}HetrixTools API Configuration${NC}"
 read -p "HetrixTools API Key (or leave empty to configure later): " HETRIX_API_KEY
 
-# Create .env file
+# Create .env file in project root
 echo -e "${GREEN}Creating .env file...${NC}"
 cat > .env << EOF
 PORT=3001
@@ -81,7 +81,20 @@ JWT_SECRET=${JWT_SECRET}
 HETRIX_API_KEY=${HETRIX_API_KEY}
 EOF
 
-echo -e "${GREEN}.env file created successfully!${NC}"
+# Also create a copy in the server directory to ensure it's available there
+echo -e "${GREEN}Creating .env file in server directory...${NC}"
+cat > server/.env << EOF
+PORT=3001
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+DB_NAME=${DB_NAME}
+JWT_SECRET=${JWT_SECRET}
+HETRIX_API_KEY=${HETRIX_API_KEY}
+EOF
+
+echo -e "${GREEN}.env files created successfully!${NC}"
 
 # Test database connection
 echo -e "${YELLOW}Testing database connection...${NC}"
@@ -247,3 +260,4 @@ if [ "$CREATE_ADMIN" != "y" ] && [ "$CREATE_ADMIN" != "Y" ]; then
 fi
 echo "========================================"
 echo -e "${NC}"
+

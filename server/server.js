@@ -6,7 +6,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
-require('dotenv').config();
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+// Load environment variables
+// First try from .env in current directory
+dotenv.config();
+
+console.log('Server starting with configuration:');
+console.log('Host:', process.env.DB_HOST);
+console.log('Port:', process.env.PORT || 3001);
+console.log('Database:', process.env.DB_NAME);
+console.log('User:', process.env.DB_USER);
 
 const app = express();
 const PORT = process.env.PORT || 3001;

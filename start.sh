@@ -23,16 +23,31 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Copy .env to server directory if it doesn't exist there
+if [ ! -f server/.env ]; then
+    echo -e "${YELLOW}Copying .env to server directory...${NC}"
+    cp .env server/.env
+fi
+
 # Test database connection before starting
 echo -e "${YELLOW}Testing database connection...${NC}"
 node -e "
     const mysql = require('./server/node_modules/mysql2/promise');
     const dotenv = require('./server/node_modules/dotenv');
+    const fs = require('fs');
     
+    // Make sure we're loading from the correct .env file
     dotenv.config();
     
     async function testConnection() {
         try {
+            // Log connection details for debugging (without the password)
+            console.log('Attempting to connect with:');
+            console.log('Host:', process.env.DB_HOST);
+            console.log('Port:', process.env.DB_PORT || 3306);
+            console.log('User:', process.env.DB_USER);
+            console.log('Database:', process.env.DB_NAME);
+            
             const connection = await mysql.createConnection({
                 host: process.env.DB_HOST,
                 port: process.env.DB_PORT || 3306,
@@ -60,7 +75,7 @@ node -e "
 # Set the environment to production
 export NODE_ENV=production
 
-# Start the server
+# Start the server from its directory to ensure it picks up the correct .env file
 echo -e "\n${GREEN}Starting server in production mode...${NC}"
 echo -e "${BOLD}Press Ctrl+C to stop the server${NC}\n"
 cd server && node server.js
