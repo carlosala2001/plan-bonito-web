@@ -238,10 +238,16 @@ export const publicApi = {
   getNodesStatus: async () => {
     try {
       const response = await api.get('/public/nodes/status');
-      return response.data;
+      // Ensure we always return an array
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.error("API response is not an array:", response.data);
+        return [];
+      }
     } catch (error) {
       console.error('Error fetching public nodes status:', error);
-      throw error;
+      return [];
     }
   }
 };
@@ -252,10 +258,16 @@ export const hetrixToolsApi = {
     try {
       // We're using our server as a proxy to HetrixTools API
       const response = await api.get('/admin/nodes/status');
-      return response.data;
+      // Ensure we always return an array
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.error("API response is not an array:", response.data);
+        return [];
+      }
     } catch (error) {
       console.error('Error fetching HetrixTools data:', error);
-      throw error;
+      return [];
     }
   }
 };

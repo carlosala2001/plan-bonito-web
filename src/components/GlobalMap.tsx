@@ -25,16 +25,39 @@ const GlobalMap: React.FC = () => {
       try {
         setLoading(true);
         const data = await publicApi.getNodesStatus();
-        setNodes(data);
+        
+        // Ensure nodes is always an array
+        if (Array.isArray(data)) {
+          setNodes(data);
+        } else {
+          console.error("Expected array of nodes but got:", typeof data, data);
+          // Fallback to empty array if data is not an array
+          setNodes([]);
+          
+          // Use sample data only if in development
+          if (process.env.NODE_ENV === 'development') {
+            setNodes([
+              { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
+              { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
+              { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
+              { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "online" },
+            ]);
+          }
+        }
       } catch (error) {
         console.error('Error fetching node status:', error);
-        // Fallback to sample data if API fails
-        setNodes([
-          { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
-          { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
-          { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
-          { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "online" },
-        ]);
+        // Set empty array to avoid map errors
+        setNodes([]);
+        
+        // Use sample data only if in development
+        if (process.env.NODE_ENV === 'development') {
+          setNodes([
+            { id: 1, name: "North America", location: "New York", latitude: 40.7128, longitude: -74.0060, status: "online" },
+            { id: 2, name: "Europe", location: "Frankfurt", latitude: 50.1109, longitude: 8.6821, status: "online" },
+            { id: 3, name: "Asia", location: "Singapore", latitude: 1.3521, longitude: 103.8198, status: "online" },
+            { id: 4, name: "Oceania", location: "Sydney", latitude: -33.8688, longitude: 151.2093, status: "online" },
+          ]);
+        }
       } finally {
         setLoading(false);
       }
@@ -159,11 +182,11 @@ const GlobalMap: React.FC = () => {
               />
 
               {/* Connection lines between nodes */}
-              {nodes.map((node, i) => {
+              {Array.isArray(nodes) && nodes.map((node, i) => {
                 const x1 = ((node.longitude + 180) / 360) * 1000;
                 const y1 = ((90 - node.latitude) / 180) * 500;
                 
-                return nodes.slice(i + 1).map(targetNode => {
+                return (Array.isArray(nodes) && nodes.slice(i + 1).map(targetNode => {
                   const x2 = ((targetNode.longitude + 180) / 360) * 1000;
                   const y2 = ((90 - targetNode.latitude) / 180) * 500;
                   
@@ -179,11 +202,11 @@ const GlobalMap: React.FC = () => {
                       <animate attributeName="stroke-dashoffset" from="0" to="20" dur="3s" repeatCount="indefinite" />
                     </path>
                   );
-                });
+                }));
               })}
 
               {/* Node locations */}
-              {nodes.map((node) => {
+              {Array.isArray(nodes) && nodes.map((node) => {
                 // Convert lat/long to SVG coordinates
                 const x = ((node.longitude + 180) / 360) * 1000;
                 const y = ((90 - node.latitude) / 180) * 500;
@@ -243,7 +266,7 @@ const GlobalMap: React.FC = () => {
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900 to-transparent z-30">
             <div className="flex items-center text-white gap-2">
               <GlobeIcon className="h-5 w-5 text-primary" />
-              <p className="text-sm font-medium">Servidores optimizados en {nodes.length} regiones globales</p>
+              <p className="text-sm font-medium">Servidores optimizados en {Array.isArray(nodes) ? nodes.length : 0} regiones globales</p>
             </div>
             
             {/* Status legend */}
