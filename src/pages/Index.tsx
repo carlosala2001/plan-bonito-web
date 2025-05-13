@@ -1,115 +1,64 @@
 
-import React, { useEffect } from "react";
+import React from "react";
+import Navbar from "@/components/Navbar";
+import StatisticsSection from "@/components/StatisticsSection";
 import PlanCarousel from "@/components/PlanCarousel";
 import PlanComparison from "@/components/PlanComparison";
-import AboutZenoScale from "@/components/AboutZenoScale";
 import SupportedGames from "@/components/SupportedGames";
-import StatisticsSection from "@/components/StatisticsSection";
-import GlobalMap from "@/components/GlobalMap";
+import AboutZenoScale from "@/components/AboutZenoScale";
 import PanelPreview from "@/components/PanelPreview";
-import Navbar from "@/components/Navbar";
-import { ChevronDownIcon, RocketIcon, ServerIcon, ShieldIcon } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import GlobalMap from "@/components/GlobalMap";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
+import { publicApi } from "@/lib/api";
 
-const Index = () => {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+const Index: React.FC = () => {
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  // Setup animation observers
-  useEffect(() => {
-    console.log("Index component mounted");
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animate-in');
-        }
-      });
-    }, { threshold: 0.1 });
-    
-    document.querySelectorAll('.animate-on-scroll').forEach(element => {
-      observer.observe(element);
-    });
-    
-    return () => {
-      document.querySelectorAll('.animate-on-scroll').forEach(element => {
-        observer.unobserve(element);
-      });
+  // Use the public API to get the plans for the homepage
+  const [plans, setPlans] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const plansData = await publicApi.getPlans('hosting');
+        setPlans(plansData);
+      } catch (error) {
+        console.error('Error loading plans:', error);
+      }
     };
+
+    loadPlans();
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 flex justify-center">
-              <img 
-                src="/lovable-uploads/b8769afe-6011-4dd7-8441-94ca0e5dfa92.png" 
-                alt="ZenoScale Logo" 
-                className="h-24 w-24 animate-fade-in" 
-              />
-            </div>
-            <h1 className="mb-6 animate-fade-in text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-              Packs <span className="gradient-text">ZenoScale</span> de Alto Rendimiento
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-zenoscale-purple/10 to-zenoscale-blue/10 pointer-events-none"></div>
+        <div className="container mx-auto px-4 py-20 md:py-32">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="bg-gradient-zenoscale bg-clip-text text-transparent">Servidores de Juegos</span> <br />
+              Rápidos y Económicos
             </h1>
-            <p className="mb-8 animate-fade-in text-lg text-muted-foreground" style={{ animationDelay: "0.2s" }}>
-              Hosting especializado en videojuegos con tecnología propia de automatización con IA, escalabilidad total y atención humana con mentalidad gamer.
+            <p className="text-lg md:text-xl mb-8 text-muted-foreground">
+              Hosting de calidad con soporte en español 24/7 y precios sin competencia
             </p>
-            <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 justify-center">
-              <Button 
-                onClick={() => scrollToSection('planes')}
-                className="animate-fade-in rounded-full bg-gradient-zenoscale px-6 py-3 font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                style={{ animationDelay: "0.4s" }}
-              >
-                Ver Packs <ChevronDownIcon className="ml-2 inline-block h-5 w-5" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" className="bg-gradient-zenoscale">
+                <a href="#plans">Ver Planes</a>
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => window.open('https://panel.zenoscale.es/', '_blank')}
-                className="animate-fade-in rounded-full px-6 py-3 font-medium shadow-sm transition-all hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                style={{ animationDelay: "0.6s" }}
-              >
-                Acceder al Panel
+              <Button size="lg" variant="outline" onClick={toggleTheme}>
+                Cambiar a modo {theme === "dark" ? "claro" : "oscuro"}
               </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Benefits */}
-      <section className="py-12 bg-muted/30 dark:bg-muted/10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all transform hover:scale-105 animate-on-scroll opacity-0 translate-y-8">
-              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
-                <RocketIcon className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Alto Rendimiento</h3>
-              <p className="text-muted-foreground">Servidores dedicados optimizados para juegos con virtualización eficiente</p>
-            </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all transform hover:scale-105 animate-on-scroll opacity-0 translate-y-8" style={{ transitionDelay: "100ms" }}>
-              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
-                <ServerIcon className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Escalabilidad Total</h3>
-              <p className="text-muted-foreground">Flexibilidad para aumentar recursos según tus necesidades sin complicaciones</p>
-            </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-lg border bg-card dark:bg-card/50 hover:shadow-md transition-all transform hover:scale-105 animate-on-scroll opacity-0 translate-y-8" style={{ transitionDelay: "200ms" }}>
-              <div className="mb-4 bg-primary/10 dark:bg-primary/20 p-3 rounded-full">
-                <ShieldIcon className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Seguridad Garantizada</h3>
-              <p className="text-muted-foreground">Protección DDoS, backups diarios y 99.9% de uptime garantizado</p>
             </div>
           </div>
         </div>
@@ -118,90 +67,83 @@ const Index = () => {
       {/* Statistics Section */}
       <StatisticsSection />
 
-      {/* Global Map Section */}
-      <GlobalMap />
-
-      {/* Plans Carousel Section */}
-      <section id="planes" className="py-12 md:py-16">
+      {/* Plans Section */}
+      <section id="plans" className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="mb-12 text-center animate-on-scroll opacity-0 translate-y-8">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Nuestros Packs</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Explora nuestras opciones y encuentra el pack que mejor se adapte a tus necesidades
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Nuestros Planes</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Soluciones flexibles para cada tipo de proyecto, con recursos garantizados y precios competitivos
             </p>
           </div>
-          <div className="animate-on-scroll opacity-0 translate-y-8">
+
+          <div className="mb-16">
             <PlanCarousel />
           </div>
+
+          <PlanComparison plans={plans} />
         </div>
       </section>
-      
+
       {/* Supported Games Section */}
       <SupportedGames />
 
-      {/* Panel Preview Section - New section */}
+      {/* Panel Preview Section */}
       <PanelPreview />
 
-      {/* About ZenoScale Section */}
+      {/* About Section */}
       <AboutZenoScale />
 
-      {/* Comparison Table */}
-      <section id="comparativa" className="py-12 md:py-16 bg-muted/30 dark:bg-muted/10">
-        <div className="container mx-auto px-4">
-          <div className="mb-12 text-center animate-on-scroll opacity-0 translate-y-8">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Comparativa de Packs</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Compara las especificaciones y características de todos nuestros packs para tomar la mejor decisión
-            </p>
-          </div>
-          <div className="gradient-border p-6 animate-on-scroll opacity-0 translate-y-8">
-            <PlanComparison />
-          </div>
-        </div>
-      </section>
+      {/* Global Map Section */}
+      <GlobalMap />
 
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 animate-on-scroll opacity-0 translate-y-8">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="mb-6 text-3xl font-bold md:text-4xl">Empieza a jugar hoy mismo</h2>
-            <p className="mb-8 text-lg text-muted-foreground">
-              Configura tu servidor en minutos y disfruta de la mejor experiencia de juego con ZenoScale
-            </p>
-            <Button 
-              className="rounded-full bg-gradient-zenoscale px-8 py-6 text-lg font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 hover:brightness-105"
-              onClick={() => window.open('https://dash.zenoscale.es/', '_blank')}
-            >
-              Crear mi servidor ahora
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* Newsletter Section */}
+      <NewsletterSubscribe />
 
       {/* Footer */}
-      <footer className="border-t py-8 bg-muted/20 dark:bg-muted/10">
+      <footer className="py-8 bg-muted/30 dark:bg-muted/10">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <img src="/lovable-uploads/b8769afe-6011-4dd7-8441-94ca0e5dfa92.png" alt="ZenoScale Logo" className="h-10 w-10 mr-2" />
-              <span className="font-bold">ZenoScale</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">ZenoScale</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Hosting de calidad con soporte en español 24/7 y precios sin competencia.
+              </p>
             </div>
-            
-            <div className="flex gap-6">
-              <a href="https://dash.zenoscale.es/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-primary hover:underline transition-colors">
-                Plataforma
-              </a>
-              <a href="https://panel.zenoscale.es/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-primary hover:underline transition-colors">
-                Panel
-              </a>
-              <a href="https://status.zenoscale.es/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-primary hover:underline transition-colors">
-                Status
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Enlaces</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="/metalscale" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    MetalScale - Servidores Dedicados
+                  </a>
+                </li>
+                <li>
+                  <a href="/zenovps" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    ZenoVPS - Servidores Virtuales
+                  </a>
+                </li>
+                <li>
+                  <a href="#plans" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Planes de Hosting
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contacto</h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Soporte 24/7
+              </p>
+              <a href="mailto:info@zenoscale.com" className="text-sm text-primary hover:underline">
+                info@zenoscale.com
               </a>
             </div>
-            
-            <div className="mt-4 md:mt-0 text-sm text-muted-foreground">
-              © 2025 ZenoScale. Todos los derechos reservados.
-            </div>
+          </div>
+          <div className="mt-8 pt-4 border-t border-muted text-center">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} ZenoScale. Todos los derechos reservados.
+            </p>
           </div>
         </div>
       </footer>

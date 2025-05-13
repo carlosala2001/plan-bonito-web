@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { Loader2 } from 'lucide-react';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -15,7 +16,8 @@ export const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <span className="ml-2 text-lg font-medium">Cargando...</span>
       </div>
     );
   }

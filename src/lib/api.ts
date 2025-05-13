@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { toast } from "sonner";
 
@@ -38,7 +39,9 @@ api.interceptors.response.use(
     if (status === 401) {
       toast.error('Sesión expirada. Por favor, inicia sesión de nuevo.');
       localStorage.removeItem('admin_token');
-      if (!window.location.pathname.includes('/admin/login')) {
+      // Only redirect if attempting to access an admin page
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/admin') && !currentPath.includes('/admin/login')) {
         window.location.href = '/admin/login';
       }
     } else if (status === 403) {
@@ -124,6 +127,41 @@ export const ctrlPanelApi = {
     }
   },
   
+  // CtrlPanel API settings
+  getCtrlPanelSettings: async () => {
+    try {
+      const response = await api.get('/admin/ctrlpanel-settings');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching CtrlPanel settings:', error);
+      throw error;
+    }
+  },
+  
+  saveCtrlPanelSettings: async (settings: { apiKey: string; apiUrl: string }) => {
+    try {
+      const response = await api.post('/admin/ctrlpanel-settings', settings);
+      toast.success('Configuración de CtrlPanel guardada correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error saving CtrlPanel settings:', error);
+      throw error;
+    }
+  },
+  
+  testCtrlPanelConnection: async (settings: { apiKey: string; apiUrl: string }) => {
+    try {
+      const response = await api.post('/admin/ctrlpanel/test-connection', settings);
+      toast.success('Conexión con CtrlPanel exitosa');
+      return response.data;
+    } catch (error) {
+      console.error('Error testing CtrlPanel connection:', error);
+      throw error;
+    }
+  }
+};
+
+export const hetrixToolsApi = {
   // HetrixTools API settings
   getHetrixToolsSettings: async () => {
     try {
@@ -138,6 +176,7 @@ export const ctrlPanelApi = {
   saveHetrixToolsApiKey: async (apiKey: string) => {
     try {
       const response = await api.post('/admin/hetrixtools-settings', { apiKey });
+      toast.success('API Key de HetrixTools guardada correctamente');
       return response.data;
     } catch (error) {
       console.error('Error saving HetrixTools API Key:', error);
@@ -148,6 +187,7 @@ export const ctrlPanelApi = {
   testHetrixToolsConnection: async (apiKey: string) => {
     try {
       const response = await api.post('/admin/hetrixtools/test-connection', { apiKey });
+      toast.success('Conexión con HetrixTools exitosa');
       return response.data;
     } catch (error) {
       console.error('Error testing HetrixTools connection:', error);
@@ -165,23 +205,241 @@ export const ctrlPanelApi = {
     }
   },
   
-  // Node management endpoints
-  getNodes: async () => {
+  getNodesStatus: async () => {
     try {
-      const response = await api.get('/admin/nodes');
+      const response = await api.get('/admin/nodes/status');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Error fetching HetrixTools data:', error);
+      return [];
+    }
+  }
+};
+
+export const zohoMailApi = {
+  // Zoho Mail settings
+  getZohoMailSettings: async () => {
+    try {
+      const response = await api.get('/admin/zoho-mail-settings');
       return response.data;
     } catch (error) {
-      console.error('Error fetching nodes:', error);
+      console.error('Error fetching Zoho Mail settings:', error);
       throw error;
     }
   },
   
-  getNodesStatus: async () => {
+  saveZohoMailSettings: async (settings: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    fromEmail: string;
+    fromName: string;
+  }) => {
     try {
-      const response = await api.get('/admin/nodes/status');
+      const response = await api.post('/admin/zoho-mail-settings', settings);
+      toast.success('Configuración de Zoho Mail guardada correctamente');
       return response.data;
     } catch (error) {
-      console.error('Error fetching nodes status:', error);
+      console.error('Error saving Zoho Mail settings:', error);
+      throw error;
+    }
+  },
+  
+  testZohoMailConnection: async (settings: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    fromEmail: string;
+    fromName: string;
+  }) => {
+    try {
+      const response = await api.post('/admin/zoho-mail/test-connection', settings);
+      toast.success('Conexión con Zoho Mail exitosa');
+      return response.data;
+    } catch (error) {
+      console.error('Error testing Zoho Mail connection:', error);
+      throw error;
+    }
+  },
+  
+  getNewsletterSubscribers: async () => {
+    try {
+      const response = await api.get('/admin/newsletter/subscribers');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching newsletter subscribers:', error);
+      throw error;
+    }
+  },
+  
+  sendNewsletter: async (data: { subject: string; content: string; testEmail?: string }) => {
+    try {
+      const response = await api.post('/admin/newsletter/send', data);
+      toast.success(data.testEmail ? 
+        'Correo de prueba enviado correctamente' : 
+        'Boletín enviado correctamente a los suscriptores'
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error sending newsletter:', error);
+      throw error;
+    }
+  }
+};
+
+export const plansApi = {
+  // Plans management
+  getPlans: async (type: 'hosting' | 'vps' | 'metal' = 'hosting') => {
+    try {
+      const response = await api.get('/admin/plans', { params: { type } });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      throw error;
+    }
+  },
+  
+  createPlan: async (planData: any) => {
+    try {
+      const response = await api.post('/admin/plans', planData);
+      toast.success('Plan creado correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error creating plan:', error);
+      throw error;
+    }
+  },
+  
+  updatePlan: async (id: number, planData: any) => {
+    try {
+      const response = await api.put(`/admin/plans/${id}`, planData);
+      toast.success('Plan actualizado correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error updating plan:', error);
+      throw error;
+    }
+  },
+  
+  deletePlan: async (id: number) => {
+    try {
+      const response = await api.delete(`/admin/plans/${id}`);
+      toast.success('Plan eliminado correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      throw error;
+    }
+  }
+};
+
+export const pagesApi = {
+  // Pages management
+  getPages: async () => {
+    try {
+      const response = await api.get('/admin/pages');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pages:', error);
+      throw error;
+    }
+  },
+  
+  getPage: async (slug: string) => {
+    try {
+      const response = await api.get(`/admin/pages/${slug}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching page:', error);
+      throw error;
+    }
+  },
+  
+  createPage: async (pageData: any) => {
+    try {
+      const response = await api.post('/admin/pages', pageData);
+      toast.success('Página creada correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error creating page:', error);
+      throw error;
+    }
+  },
+  
+  updatePage: async (id: number, pageData: any) => {
+    try {
+      const response = await api.put(`/admin/pages/${id}`, pageData);
+      toast.success('Página actualizada correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error updating page:', error);
+      throw error;
+    }
+  },
+  
+  deletePage: async (id: number) => {
+    try {
+      const response = await api.delete(`/admin/pages/${id}`);
+      toast.success('Página eliminada correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting page:', error);
+      throw error;
+    }
+  }
+};
+
+export const gamesApi = {
+  // Supported games management
+  getGames: async () => {
+    try {
+      const response = await api.get('/admin/games');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      throw error;
+    }
+  },
+  
+  createGame: async (formData: FormData) => {
+    try {
+      const response = await api.post('/admin/games', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      toast.success('Juego añadido correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error creating game:', error);
+      throw error;
+    }
+  },
+  
+  updateGame: async (id: number, formData: FormData) => {
+    try {
+      const response = await api.put(`/admin/games/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      toast.success('Juego actualizado correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error updating game:', error);
+      throw error;
+    }
+  },
+  
+  deleteGame: async (id: number) => {
+    try {
+      const response = await api.delete(`/admin/games/${id}`);
+      toast.success('Juego eliminado correctamente');
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting game:', error);
       throw error;
     }
   }
@@ -195,7 +453,7 @@ export const publicApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching public servers count:', error);
-      throw error;
+      return { count: 0 };
     }
   },
   
@@ -206,7 +464,7 @@ export const publicApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching public users count:', error);
-      throw error;
+      return { count: 0 };
     }
   },
   
@@ -225,25 +483,51 @@ export const publicApi = {
       console.error('Error fetching public nodes status:', error);
       return [];
     }
-  }
-};
-
-// HetrixTools API integration
-export const hetrixToolsApi = {
-  getNodesStatus: async () => {
+  },
+  
+  // Get public plans
+  getPlans: async (type: 'hosting' | 'vps' | 'metal' = 'hosting') => {
     try {
-      // We're using our server as a proxy to HetrixTools API
-      const response = await api.get('/admin/nodes/status');
-      // Ensure we always return an array
-      if (Array.isArray(response.data)) {
-        return response.data;
-      } else {
-        console.error("API response is not an array:", response.data);
-        return [];
-      }
+      const response = await api.get('/public/plans', { params: { type } });
+      return response.data;
     } catch (error) {
-      console.error('Error fetching HetrixTools data:', error);
+      console.error('Error fetching public plans:', error);
       return [];
+    }
+  },
+  
+  // Get public page by slug
+  getPage: async (slug: string) => {
+    try {
+      const response = await api.get(`/public/pages/${slug}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching public page (${slug}):`, error);
+      return null;
+    }
+  },
+  
+  // Get public supported games
+  getGames: async () => {
+    try {
+      const response = await api.get('/public/games');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching public games:', error);
+      return [];
+    }
+  },
+  
+  // Subscribe to newsletter
+  subscribeNewsletter: async (data: { email: string; name?: string }) => {
+    try {
+      const response = await api.post('/public/newsletter/subscribe', data);
+      toast.success('¡Gracias por suscribirte a nuestro boletín!');
+      return response.data;
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      throw error;
     }
   }
 };
+

@@ -1,83 +1,52 @@
 
 #!/bin/bash
 
-# Set console color variables
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+# Colors
 RED='\033[0;31m'
+GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-BOLD='\033[1m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-# Print banner
-echo -e "${BLUE}${BOLD}"
-echo "========================================"
-echo "         ZenoScale Admin Panel          "
-echo "========================================"
-echo -e "${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}         ZenoScale Admin Panel${NC}"
+echo -e "${BLUE}========================================${NC}"
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    echo -e "${RED}Error: .env file not found.${NC}"
-    echo -e "Please run ${BOLD}./bin/install.sh${NC} first to set up the application."
-    exit 1
+# Load environment variables from .env files
+if [ -f .env ]; then
+  source .env
 fi
 
-# Copy .env to server directory if it doesn't exist there
-if [ ! -f server/.env ]; then
-    echo -e "${YELLOW}Copying .env to server directory...${NC}"
-    cp .env server/.env
+if [ -f server/.env ]; then
+  source server/.env
 fi
 
-# Test database connection before starting
+# Testing database connection
 echo -e "${YELLOW}Testing database connection...${NC}"
-node -e "
-    const mysql = require('./server/node_modules/mysql2/promise');
-    const dotenv = require('./server/node_modules/dotenv');
-    const fs = require('fs');
-    
-    // Make sure we're loading from the correct .env file
-    dotenv.config();
-    
-    async function testConnection() {
-        try {
-            // Log connection details for debugging (without the password)
-            console.log('Attempting to connect with:');
-            console.log('Host:', process.env.DB_HOST);
-            console.log('Port:', process.env.DB_PORT || 3306);
-            console.log('User:', process.env.DB_USER);
-            console.log('Database:', process.env.DB_NAME);
-            
-            const connection = await mysql.createConnection({
-                host: process.env.DB_HOST,
-                port: process.env.DB_PORT || 3306,
-                user: process.env.DB_USER,
-                password: process.env.DB_PASSWORD,
-                database: process.env.DB_NAME
-            });
-            
-            console.log('Database connection successful!');
-            connection.end();
-            process.exit(0);
-        } catch (error) {
-            console.error('Database connection failed:', error.message);
-            process.exit(1);
-        }
-    }
-    
-    testConnection();
-" || {
-    echo -e "${RED}Failed to connect to database. Please check your .env file and database settings.${NC}"
-    echo -e "You may need to run ${BOLD}./bin/install.sh${NC} again to reconfigure your database settings."
-    exit 1
-}
+mysql -h${DB_HOST:-localhost} -P${DB_PORT:-3306} -u${DB_USER:-root} -p${DB_PASSWORD} ${DB_NAME:-zenoscale_admin} -e "SELECT 'Database connection successful!' as Message;" 2>/dev/null
 
-# Set the environment to production
-export NODE_ENV=production
+if [ $? -eq 0 ]; then
+  echo -e "${GREEN}Database connection successful!${NC}"
+else
+  echo -e "${RED}Failed to connect to database. Please check your credentials in .env file.${NC}"
+  echo -e "${YELLOW}You might need to re-run ./bin/install.sh to update your database settings.${NC}"
+  exit 1
+fi
 
-# Start the server from its directory to ensure it picks up the correct .env file
-echo -e "\n${GREEN}Starting server in production mode...${NC}"
-echo -e "${BOLD}Press Ctrl+C to stop the server${NC}\n"
+# Check for package.json and install dependencies if needed
+if [ ! -d "node_modules" ]; then
+  echo -e "${YELLOW}Installing dependencies...${NC}"
+  npm install
+fi
+
+if [ ! -d "server/node_modules" ]; then
+  echo -e "${YELLOW}Installing server dependencies...${NC}"
+  cd server && npm install && cd ..
+fi
+
+# Start the server in production mode
+echo -e "${YELLOW}Starting server in production mode...${NC}"
+echo -e "${YELLOW}Press Ctrl+C to stop the server${NC}"
+echo
 cd server && node server.js
 
-# The script will continue to run until the server is stopped

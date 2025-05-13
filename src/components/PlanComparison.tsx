@@ -2,10 +2,40 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { plansData } from "@/data/plans";
 import { CheckIcon, XIcon } from "lucide-react";
 
-const PlanComparison: React.FC = () => {
+interface PlanResource {
+  value: string | number;
+  unit: string;
+}
+
+interface PlanDescription {
+  idealFor: string;
+  perfectFor: string;
+}
+
+interface Plan {
+  name: string;
+  price: number;
+  resources: {
+    cpu: PlanResource;
+    ram: PlanResource;
+    disk: PlanResource;
+    backups: number;
+    databases: number;
+    ports: number;
+  };
+  billing: string;
+  minCredits: number;
+  description: PlanDescription;
+  highlight?: boolean;
+}
+
+interface PlanComparisonProps {
+  plans: Plan[];
+}
+
+const PlanComparison: React.FC<PlanComparisonProps> = ({ plans = [] }) => {
   return (
     <div className="w-full">
       <Tabs defaultValue="specs" className="w-full">
@@ -29,12 +59,20 @@ const PlanComparison: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plansData.map((plan, index) => (
+              {plans.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
                   <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell>{plan.resources.cpu.value} {plan.resources.cpu.unit}</TableCell>
-                  <TableCell>{plan.resources.ram.value} {plan.resources.ram.unit}</TableCell>
-                  <TableCell>{(plan.resources.disk.value / 1024).toFixed(1)} GB</TableCell>
+                  <TableCell>
+                    {typeof plan.resources.ram.value === 'number' && plan.resources.ram.value >= 1024 
+                      ? `${(plan.resources.ram.value / 1024).toFixed(1)} GB` 
+                      : `${plan.resources.ram.value} ${plan.resources.ram.unit}`}
+                  </TableCell>
+                  <TableCell>
+                    {typeof plan.resources.disk.value === 'number' && plan.resources.disk.value >= 1024 
+                      ? `${(plan.resources.disk.value / 1024).toFixed(1)} GB` 
+                      : `${plan.resources.disk.value} ${plan.resources.disk.unit}`}
+                  </TableCell>
                   <TableCell>{plan.resources.backups}</TableCell>
                   <TableCell>{plan.resources.databases}</TableCell>
                   <TableCell>{plan.resources.ports}</TableCell>
@@ -56,7 +94,7 @@ const PlanComparison: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plansData.map((plan, index) => (
+              {plans.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
                   <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.idealFor}</TableCell>
