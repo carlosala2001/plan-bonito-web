@@ -6,7 +6,7 @@ import {
   useQueryClient
 } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { adminApi } from "@/lib/api";
+import { plansApi } from "@/lib/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -119,12 +119,12 @@ const PlansManager: React.FC = () => {
     error
   } = useQuery({
     queryKey: ['plans', selectedType],
-    queryFn: () => adminApi.getPlans(selectedType)
+    queryFn: () => plansApi.getPlans(selectedType as 'hosting' | 'vps' | 'metal')
   });
   
   // Create new plan
   const createMutation = useMutation({
-    mutationFn: (plan: PlanType) => adminApi.createPlan(plan),
+    mutationFn: (plan: PlanType) => plansApi.createPlan(plan),
     onSuccess: () => {
       toast({
         title: "Plan creado",
@@ -146,7 +146,7 @@ const PlansManager: React.FC = () => {
   // Update plan
   const updateMutation = useMutation({
     mutationFn: ({id, planData}: {id: number, planData: PlanType}) => {
-      return adminApi.updatePlan(id, planData);
+      return plansApi.updatePlan(id, planData);
     },
     onSuccess: () => {
       toast({
@@ -168,7 +168,7 @@ const PlansManager: React.FC = () => {
   
   // Delete plan
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => adminApi.deletePlan(id),
+    mutationFn: (id: number) => plansApi.deletePlan(id),
     onSuccess: () => {
       toast({
         title: "Plan eliminado",

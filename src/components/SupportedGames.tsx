@@ -1,122 +1,94 @@
+
 import React, { useState, useEffect } from "react";
 import { publicApi } from "@/lib/api";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface Game {
+  id: number;
   name: string;
-  logo: string;
-  description: string;
+  image_url: string;
+  description?: string;
 }
 
-const fallbackGames: Game[] = [
-  {
-    name: "Minecraft",
-    logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
-    description: "Java y Bedrock"
-  },
-  {
-    name: "Garry's Mod",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Garry%27s_Mod_logo.svg/2048px-Garry%27s_Mod_logo.svg.png",
-    description: "Servidores rápidos y eficientes"
-  },
-  {
-    name: "Counter-Strike 2",
-    logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
-    description: "Para comunidades y equipos"
-  },
-  {
-    name: "Team Fortress 2",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
-    description: "Servidores personalizables"
-  },
-  {
-    name: "ARK: Survival Evolved",
-    logo: "https://upload.wikimedia.org/wikipedia/fr/7/7d/Ark_Survival_Evolved_Logo.png",
-    description: "Alto rendimiento garantizado"
-  }
-];
-
 const SupportedGames: React.FC = () => {
-  const [games, setGames] = useState<Game[]>(fallbackGames);
-  const [loading, setLoading] = useState(true);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const gamesData = await publicApi.getGames();
-        console.log("Games data received:", gamesData);
-        
-        // Check if gamesData is an array and has items
-        if (Array.isArray(gamesData) && gamesData.length > 0) {
-          setGames(gamesData);
+        const result = await publicApi.getGames();
+        // Ensure we're setting an array
+        if (Array.isArray(result)) {
+          setGames(result);
         } else {
-          console.warn("API returned invalid games data, using fallback");
-          // Keep the fallback games that were set in useState
+          console.error('API returned non-array games data:', result);
+          setGames([]);
         }
       } catch (error) {
-        console.error("Error loading games:", error);
-        // Fallback games are already set in the initial state
+        console.error('Error fetching games:', error);
+        setGames([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchGames();
   }, []);
 
-  if (loading) {
-    return (
-      <section className="py-16 md:py-20 bg-muted/30 dark:bg-muted/10">
-        <div className="container">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Juegos Soportados</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Cargando juegos soportados...
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-5">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="flex flex-col items-center rounded-lg border bg-card dark:bg-card/50 p-6 text-center transition-all hover:shadow-lg animate-pulse">
-                <div className="mb-4 h-16 w-16 rounded-full bg-muted"></div>
-                <div className="mb-1 h-4 w-3/4 rounded bg-muted"></div>
-                <div className="h-3 w-1/2 rounded bg-muted"></div>
+  // Prepare games array for rendering, ensuring it's an array
+  const gamesData = Array.isArray(games) ? games : [];
+
+  return (
+    <section id="games" className="py-16 md:py-24 bg-muted/20">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Juegos Soportados</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Ofrecemos soporte para una amplia variedad de juegos, con configuraciones optimizadas y asistencia personalizada
+          </p>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-muted rounded-lg p-4 animate-pulse">
+                <div className="relative w-full">
+                  <div className="aspect-square bg-gray-300 rounded-md"></div>
+                </div>
+                <div className="h-4 bg-gray-300 rounded mt-4 w-3/4 mx-auto"></div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Extra safety check before rendering
-  const displayGames = Array.isArray(games) ? games : fallbackGames;
-
-  return (
-    <section className="py-16 md:py-20 bg-muted/30 dark:bg-muted/10">
-      <div className="container">
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">Juegos Soportados</h2>
-          <p className="mx-auto max-w-2xl text-muted-foreground">
-            Hosting optimizado para los juegos más populares con configuraciones personalizadas
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-5">
-          {displayGames.map((game, index) => (
-            <div 
-              key={index} 
-              className="flex flex-col items-center rounded-lg border bg-card dark:bg-card/50 p-6 text-center transition-all hover:shadow-lg overflow-hidden relative group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-zenoscale-purple/20 to-zenoscale-blue/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative z-10">
-                <div className="mb-4 h-16 w-16 flex items-center justify-center bg-muted/50 dark:bg-muted/20 rounded-full p-2 overflow-hidden">
-                  <img src={game.logo} alt={game.name} className="h-full w-full object-contain" />
+        ) : gamesData.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {gamesData.map((game) => (
+              <div key={game.id} className="bg-card hover:bg-accent rounded-lg p-4 transition-colors group">
+                <div className="relative w-full">
+                  <AspectRatio ratio={1 / 1} className="bg-muted rounded-md overflow-hidden">
+                    <img
+                      src={game.image_url}
+                      alt={game.name}
+                      className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                    />
+                  </AspectRatio>
                 </div>
-                <h3 className="mb-1 font-semibold">{game.name}</h3>
-                <p className="text-xs text-muted-foreground">{game.description}</p>
+                <div className="text-center mt-3">
+                  <h3 className="font-medium">{game.name}</h3>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-8 bg-card rounded-lg">
+            <p>No hay juegos disponibles en este momento.</p>
+          </div>
+        )}
+
+        <div className="mt-12 text-center">
+          <p className="text-muted-foreground mb-6">
+            ¿No encuentras tu juego favorito? ¡Contáctanos y lo agregaremos a nuestra lista de servidores soportados!
+          </p>
         </div>
       </div>
     </section>

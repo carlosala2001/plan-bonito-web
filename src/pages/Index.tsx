@@ -33,7 +33,6 @@ const Index: React.FC = () => {
           setPlans(plansData);
         } else {
           console.error('API did not return an array for plans:', plansData);
-          // Set to empty array instead of undefined
           setPlans([]);
         }
       } catch (error) {
@@ -46,6 +45,9 @@ const Index: React.FC = () => {
 
     loadPlans();
   }, []);
+
+  // Ensure plans is always an array
+  const safetyPlans = Array.isArray(plans) ? plans : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -94,7 +96,7 @@ const Index: React.FC = () => {
 
           {/* Only render PlanComparison if we have plans or if loading is complete */}
           {(!isLoading) && (
-            <PlanComparison plans={Array.isArray(plans) ? plans : []} />
+            <PlanComparison plans={safetyPlans} />
           )}
         </div>
       </section>
