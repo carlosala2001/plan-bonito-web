@@ -1,538 +1,350 @@
 
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient
+} from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { adminApi } from "@/lib/api";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { plansApi } from "@/lib/api";
-import { toast } from "sonner";
-import { PlusCircle, FileEdit, Trash2, Loader2 } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PlusCircle, Pencil, Trash2, Check, X, AlertTriangle } from "lucide-react";
 
-interface PlanFormProps {
-  initialPlan?: any;
-  planType: string;
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
-
+// Define plan type
 interface PlanType {
   id?: number;
   name: string;
-  price: number;
-  interval: string;
   type: string;
-  popular?: boolean;
-  features?: string[];
-  description?: string;
-  cpu?: string;
-  ram?: string;
-  storage?: string;
-  bandwidth?: string;
-  backups?: string;
-  databases?: string;
-  ddos_protection?: boolean;
-  order?: number;
+  price: number;
+  discountPrice?: number;
+  currency: string;
+  period: string;
+  description: string;
+  features: string[];
+  recommended: boolean;
+  order: number;
+  active: boolean;
 }
 
-const PlanForm: React.FC<PlanFormProps> = ({ initialPlan, planType, onSubmit, onCancel, isSubmitting }) => {
-  const [plan, setPlan] = useState<PlanType>({
-    name: initialPlan?.name || "",
-    price: initialPlan?.price || 0,
-    interval: initialPlan?.interval || "monthly",
-    type: planType,
-    popular: initialPlan?.popular || false,
-    description: initialPlan?.description || "",
-    features: initialPlan?.features || [],
-    cpu: initialPlan?.cpu || "",
-    ram: initialPlan?.ram || "",
-    storage: initialPlan?.storage || "",
-    bandwidth: initialPlan?.bandwidth || "",
-    backups: initialPlan?.backups || "Daily",
-    databases: initialPlan?.databases || "Unlimited",
-    ddos_protection: initialPlan?.ddos_protection || true,
-    order: initialPlan?.order || 0,
-  });
-  
-  const [featureInput, setFeatureInput] = useState("");
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setPlan({ ...plan, [name]: checked });
-    } else if (type === 'number') {
-      setPlan({ ...plan, [name]: parseFloat(value) });
-    } else {
-      setPlan({ ...plan, [name]: value });
-    }
-  };
-  
-  const handleSelectChange = (value: string, name: string) => {
-    setPlan({ ...plan, [name]: value });
-  };
-  
-  const handleAddFeature = () => {
-    if (featureInput.trim()) {
-      setPlan({
-        ...plan,
-        features: [...(plan.features || []), featureInput.trim()]
-      });
-      setFeatureInput("");
-    }
-  };
-  
-  const handleRemoveFeature = (index: number) => {
-    const newFeatures = [...(plan.features || [])];
-    newFeatures.splice(index, 1);
-    setPlan({ ...plan, features: newFeatures });
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Include the ID if we're editing
-    const submitData = initialPlan?.id 
-      ? { ...plan, id: initialPlan.id }
-      : plan;
-    onSubmit(submitData);
-  };
-  
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="name">Nombre del Plan</Label>
-          <Input id="name" name="name" value={plan.name} onChange={handleChange} required />
-        </div>
-        <div>
-          <Label htmlFor="price">Precio (€)</Label>
-          <Input 
-            id="price" 
-            name="price" 
-            type="number" 
-            min="0" 
-            step="0.01" 
-            value={plan.price} 
-            onChange={handleChange} 
-            required 
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="interval">Intervalo de Facturación</Label>
-          <Select 
-            value={plan.interval}
-            onValueChange={(value) => handleSelectChange(value, 'interval')}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar intervalo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="monthly">Mensual</SelectItem>
-              <SelectItem value="quarterly">Trimestral</SelectItem>
-              <SelectItem value="semiannual">Semestral</SelectItem>
-              <SelectItem value="annual">Anual</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-end">
-          <div className="flex items-center h-10 space-x-2">
-            <input 
-              type="checkbox" 
-              id="popular" 
-              name="popular"
-              className="w-4 h-4 rounded border-gray-300" 
-              checked={plan.popular}
-              onChange={handleChange}
-            />
-            <Label htmlFor="popular">Plan Popular</Label>
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="description">Descripción</Label>
-        <Textarea 
-          id="description" 
-          name="description" 
-          value={plan.description || ""} 
-          onChange={handleChange} 
-          rows={2}
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="cpu">CPU</Label>
-          <Input id="cpu" name="cpu" value={plan.cpu} onChange={handleChange} />
-        </div>
-        <div>
-          <Label htmlFor="ram">RAM</Label>
-          <Input id="ram" name="ram" value={plan.ram} onChange={handleChange} />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="storage">Almacenamiento</Label>
-          <Input id="storage" name="storage" value={plan.storage} onChange={handleChange} />
-        </div>
-        <div>
-          <Label htmlFor="bandwidth">Ancho de Banda</Label>
-          <Input id="bandwidth" name="bandwidth" value={plan.bandwidth} onChange={handleChange} />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="backups">Copias de Seguridad</Label>
-          <Select 
-            value={plan.backups}
-            onValueChange={(value) => handleSelectChange(value, 'backups')}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar frecuencia" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Daily">Diarias</SelectItem>
-              <SelectItem value="Weekly">Semanales</SelectItem>
-              <SelectItem value="None">Ninguna</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="databases">Bases de Datos</Label>
-          <Input id="databases" name="databases" value={plan.databases} onChange={handleChange} />
-        </div>
-        <div className="flex items-end">
-          <div className="flex items-center h-10 space-x-2">
-            <input 
-              type="checkbox" 
-              id="ddos_protection" 
-              name="ddos_protection"
-              className="w-4 h-4 rounded border-gray-300" 
-              checked={plan.ddos_protection}
-              onChange={handleChange}
-            />
-            <Label htmlFor="ddos_protection">Protección DDoS</Label>
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <Label>Características</Label>
-        <div className="flex gap-2 mb-2">
-          <Input 
-            value={featureInput}
-            onChange={(e) => setFeatureInput(e.target.value)}
-            placeholder="Nueva característica"
-          />
-          <Button type="button" onClick={handleAddFeature} variant="outline">Agregar</Button>
-        </div>
-        <div className="border rounded-md p-3 bg-muted/20">
-          {!plan.features?.length && (
-            <p className="text-muted-foreground text-center py-2 text-sm">No hay características agregadas</p>
-          )}
-          <ul className="space-y-1">
-            {plan.features?.map((feature, index) => (
-              <li key={index} className="flex justify-between items-center bg-background rounded p-2">
-                <span>{feature}</span>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={() => handleRemoveFeature(index)} 
-                  className="h-7 w-7"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="order">Orden</Label>
-        <Input 
-          id="order" 
-          name="order" 
-          type="number" 
-          min="0" 
-          value={plan.order} 
-          onChange={handleChange}
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          Determina el orden de visualización (menor número primero)
-        </p>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline" type="button" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {initialPlan ? "Actualizando..." : "Guardando..."}
-            </>
-          ) : (
-            initialPlan ? "Actualizar Plan" : "Guardar Plan"
-          )}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
+const planTypes = [
+  { id: "hosting", label: "Game Hosting" },
+  { id: "vps", label: "VPS" },
+  { id: "dedicated", label: "Dedicated Servers" }
+];
+
+const initialPlanState: PlanType = {
+  name: "",
+  type: "hosting",
+  price: 0,
+  discountPrice: 0,
+  currency: "EUR",
+  period: "month",
+  description: "",
+  features: [],
+  recommended: false,
+  order: 0,
+  active: true
 };
 
 const PlansManager: React.FC = () => {
-  const { type = 'hosting' } = useParams<{type?: string}>();
+  const { type } = useParams<{ type: string }>();
   const navigate = useNavigate();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [search, setSearch] = useState("");
-  
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const { data: plans = [], isLoading } = useQuery({
-    queryKey: ['plans', type],
-    queryFn: () => plansApi.getPlans(type as 'hosting' | 'vps' | 'metal'),
+  const [selectedType, setSelectedType] = useState(type || "hosting");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<PlanType | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<PlanType>(initialPlanState);
+  const [newFeature, setNewFeature] = useState("");
+  
+  // Select plan type tab
+  useEffect(() => {
+    if (type && planTypes.find(t => t.id === type)) {
+      setSelectedType(type);
+    }
+  }, [type]);
+  
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setSelectedType(value);
+    navigate(`/admin/plans/${value}`);
+  };
+
+  // Fetch plans of the selected type
+  const {
+    data: plans,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['plans', selectedType],
+    queryFn: () => adminApi.getPlans(selectedType)
   });
   
-  const { mutate: createPlan, isPending: isCreating } = useMutation({
-    mutationFn: plansApi.createPlan,
+  // Create new plan
+  const createMutation = useMutation({
+    mutationFn: (plan: PlanType) => adminApi.createPlan(plan),
     onSuccess: () => {
-      toast.success("Plan añadido correctamente");
-      queryClient.invalidateQueries({ queryKey: ['plans', type] });
-      setIsAddDialogOpen(false);
+      toast({
+        title: "Plan creado",
+        description: "El plan ha sido creado exitosamente",
+      });
+      queryClient.invalidateQueries({ queryKey: ['plans', selectedType] });
+      resetForm();
+      setIsDialogOpen(false);
     },
     onError: (error) => {
-      toast.error("Error al añadir plan");
-      console.error("Error al añadir plan:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `No se pudo crear el plan: ${error}`,
+      });
     }
   });
   
-  const { mutate: updatePlan, isPending: isUpdating } = useMutation({
-    mutationFn: plansApi.updatePlan,
+  // Update plan
+  const updateMutation = useMutation({
+    mutationFn: ({id, planData}: {id: number, planData: PlanType}) => {
+      return adminApi.updatePlan(id, planData);
+    },
     onSuccess: () => {
-      toast.success("Plan actualizado correctamente");
-      queryClient.invalidateQueries({ queryKey: ['plans', type] });
-      setIsEditDialogOpen(false);
-      setSelectedPlan(null);
+      toast({
+        title: "Plan actualizado",
+        description: "El plan ha sido actualizado exitosamente",
+      });
+      queryClient.invalidateQueries({ queryKey: ['plans', selectedType] });
+      resetForm();
+      setIsDialogOpen(false);
     },
     onError: (error) => {
-      toast.error("Error al actualizar plan");
-      console.error("Error al actualizar plan:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `No se pudo actualizar el plan: ${error}`,
+      });
     }
   });
   
-  const { mutate: deletePlan, isPending: isDeleting } = useMutation({
-    mutationFn: plansApi.deletePlan,
+  // Delete plan
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => adminApi.deletePlan(id),
     onSuccess: () => {
-      toast.success("Plan eliminado correctamente");
-      queryClient.invalidateQueries({ queryKey: ['plans', type] });
+      toast({
+        title: "Plan eliminado",
+        description: "El plan ha sido eliminado exitosamente",
+      });
+      queryClient.invalidateQueries({ queryKey: ['plans', selectedType] });
       setIsDeleteDialogOpen(false);
-      setSelectedPlan(null);
     },
     onError: (error) => {
-      toast.error("Error al eliminar plan");
-      console.error("Error al eliminar plan:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `No se pudo eliminar el plan: ${error}`,
+      });
     }
   });
-  
-  const handleCreatePlan = (data: any) => {
-    createPlan(data);
+
+  // Reset form
+  const resetForm = () => {
+    setCurrentPlan({
+      ...initialPlanState,
+      type: selectedType
+    });
+    setEditingPlan(null);
   };
   
-  const handleUpdatePlan = (data: any) => {
-    if (data.id) {
-      updatePlan({ id: data.id, planData: data });
-    }
+  // Open create dialog
+  const handleCreateClick = () => {
+    resetForm();
+    setIsDialogOpen(true);
   };
   
-  const handleDeletePlan = () => {
-    if (selectedPlan?.id) {
-      deletePlan(selectedPlan.id);
-    }
+  // Open edit dialog
+  const handleEditClick = (plan: PlanType) => {
+    setEditingPlan(plan);
+    setCurrentPlan({
+      ...plan,
+      features: Array.isArray(plan.features) ? plan.features : []
+    });
+    setIsDialogOpen(true);
   };
   
-  const handleEditPlan = (plan: any) => {
-    setSelectedPlan(plan);
-    setIsEditDialogOpen(true);
-  };
-  
-  const handleDeleteClick = (plan: any) => {
-    setSelectedPlan(plan);
+  // Open delete dialog
+  const handleDeleteClick = (plan: PlanType) => {
+    setEditingPlan(plan);
     setIsDeleteDialogOpen(true);
   };
   
-  const handleTypeChange = (newType: string) => {
-    navigate(`/admin/plans/${newType}`);
+  // Submit form
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingPlan && editingPlan.id) {
+      updateMutation.mutate({ id: editingPlan.id, planData: currentPlan });
+    } else {
+      createMutation.mutate(currentPlan);
+    }
   };
   
-  const filteredPlans = Array.isArray(plans) 
-    ? plans.filter((plan: any) => 
-        plan.name?.toLowerCase().includes(search.toLowerCase()) || 
-        plan.description?.toLowerCase().includes(search.toLowerCase())
-      )
-    : [];
-  
-  const typeNames = {
-    hosting: "Hosting de Juegos",
-    vps: "Servidores VPS",
-    metal: "Servidores Dedicados"
+  // Add feature to plan
+  const handleAddFeature = () => {
+    if (!newFeature.trim()) return;
+    
+    setCurrentPlan(prev => ({
+      ...prev,
+      features: [...(prev.features || []), newFeature.trim()]
+    }));
+    setNewFeature("");
   };
   
+  // Remove feature from plan
+  const handleRemoveFeature = (index: number) => {
+    setCurrentPlan(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Planes</h1>
-          <p className="text-muted-foreground">
-            Administra los planes que ofreces a tus clientes
-          </p>
-        </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Gestión de Planes</h1>
+        <Button onClick={handleCreateClick}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Añadir Plan
+          Nuevo Plan
         </Button>
       </div>
-      
-      <Tabs value={type} onValueChange={handleTypeChange} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="hosting">Hosting</TabsTrigger>
-          <TabsTrigger value="vps">VPS</TabsTrigger>
-          <TabsTrigger value="metal">Dedicados</TabsTrigger>
+
+      <Tabs defaultValue={selectedType} value={selectedType} onValueChange={handleTabChange}>
+        <TabsList className="mb-4">
+          {planTypes.map(type => (
+            <TabsTrigger key={type.id} value={type.id}>
+              {type.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
-      </Tabs>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{typeNames[type as keyof typeof typeNames] || "Planes"}</CardTitle>
-            <CardDescription>
-              Listado de planes de {typeNames[type as keyof typeof typeNames]?.toLowerCase() || "servicios"}
-            </CardDescription>
-          </div>
-          <div className="w-80">
-            <Input
-              placeholder="Buscar planes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filteredPlans.length === 0 ? (
-            <div className="text-center py-12 border rounded-md">
-              {search ? (
-                <p className="text-muted-foreground">No se encontraron planes que coincidan con tu búsqueda</p>
-              ) : (
-                <>
-                  <div className="mx-auto h-12 w-12 text-muted-foreground flex items-center justify-center border border-dashed rounded-full">
-                    <PlusCircle className="h-6 w-6" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold">No hay planes configurados</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Añade algunos planes para mostrarlos en tu web
-                  </p>
-                  <Button onClick={() => setIsAddDialogOpen(true)} className="mt-4">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Añadir Plan
+
+        {planTypes.map(type => (
+          <TabsContent key={type.id} value={type.id} className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-8 w-1/3" />
+                      <Skeleton className="h-4 w-1/4" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : isError ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-red-500">Error</CardTitle>
+                  <CardDescription>
+                    Ocurrió un error al cargar los planes: {String(error)}
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ['plans', selectedType] })}
+                  >
+                    Reintentar
                   </Button>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+                </CardFooter>
+              </Card>
+            ) : Array.isArray(plans) && plans.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Orden</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Precio</TableHead>
-                    <TableHead>Recursos</TableHead>
-                    <TableHead>Popular</TableHead>
+                    <TableHead>Descuento</TableHead>
+                    <TableHead className="text-center">Destacado</TableHead>
+                    <TableHead className="text-center">Activo</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPlans.map((plan: any) => (
+                  {Array.isArray(plans) && plans.map((plan) => (
                     <TableRow key={plan.id}>
-                      <TableCell className="font-medium">
-                        {plan.name}
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {plan.description ? (
-                            plan.description.length > 50 ? 
-                              `${plan.description.substring(0, 50)}...` : 
-                              plan.description
-                          ) : (
-                            'Sin descripción'
-                          )}
-                        </div>
+                      <TableCell>{plan.order}</TableCell>
+                      <TableCell>{plan.name}</TableCell>
+                      <TableCell>
+                        {plan.price} {plan.currency}/{plan.period}
                       </TableCell>
                       <TableCell>
-                        {plan.price} € / {plan.interval === 'monthly' 
-                          ? 'mes' 
-                          : plan.interval === 'quarterly' 
-                            ? 'trimestre' 
-                            : plan.interval === 'semiannual' 
-                              ? 'semestre' 
-                              : 'año'
-                        }
+                        {plan.discountPrice ? `${plan.discountPrice} ${plan.currency}` : "-"}
                       </TableCell>
-                      <TableCell>
-                        <div className="text-xs">
-                          {plan.cpu && <div>CPU: {plan.cpu}</div>}
-                          {plan.ram && <div>RAM: {plan.ram}</div>}
-                          {plan.storage && <div>Almacenamiento: {plan.storage}</div>}
-                        </div>
+                      <TableCell className="text-center">
+                        {plan.recommended ? <Check size={18} className="mx-auto text-green-500" /> : "-"}
                       </TableCell>
-                      <TableCell>
-                        {plan.popular ? (
-                          <div className="flex items-center">
-                            <div className="h-2 w-2 rounded-full mr-2 bg-primary" />
-                            <span>Sí</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <div className="h-2 w-2 rounded-full mr-2 bg-muted" />
-                            <span className="text-muted-foreground">No</span>
-                          </div>
-                        )}
+                      <TableCell className="text-center">
+                        {plan.active ? <Check size={18} className="mx-auto text-green-500" /> : <X size={18} className="mx-auto text-red-500" />}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditPlan(plan)}
-                          >
-                            <FileEdit className="h-4 w-4" />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(plan)}>
+                            <Pencil size={16} />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
                             onClick={() => handleDeleteClick(plan)}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 size={16} />
                           </Button>
                         </div>
                       </TableCell>
@@ -540,70 +352,301 @@ const PlansManager: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>No hay planes</CardTitle>
+                  <CardDescription>
+                    No se encontraron planes para esta categoría.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button onClick={handleCreateClick}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Crear Plan
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
+
+      {/* Create/Edit Plan Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPlan ? "Editar Plan" : "Nuevo Plan"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingPlan
+                ? "Modifica los detalles del plan seleccionado"
+                : "Rellena los detalles para crear un nuevo plan"}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  value={currentPlan.name}
+                  onChange={(e) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      name: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Tipo</Label>
+                <Select
+                  value={currentPlan.type}
+                  onValueChange={(value) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      type: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {planTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Precio</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={currentPlan.price}
+                  onChange={(e) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      price: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discountPrice">Precio con descuento (opcional)</Label>
+                <Input
+                  id="discountPrice"
+                  type="number"
+                  step="0.01"
+                  value={currentPlan.discountPrice || ""}
+                  onChange={(e) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      discountPrice: e.target.value ? parseFloat(e.target.value) : undefined,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency">Moneda</Label>
+                <Select
+                  value={currentPlan.currency}
+                  onValueChange={(value) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      currency: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar moneda" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="period">Periodo</Label>
+                <Select
+                  value={currentPlan.period}
+                  onValueChange={(value) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      period: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar periodo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">Mensual</SelectItem>
+                    <SelectItem value="year">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="order">Orden</Label>
+                <Input
+                  id="order"
+                  type="number"
+                  value={currentPlan.order}
+                  onChange={(e) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      order: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox
+                  id="recommended"
+                  checked={currentPlan.recommended}
+                  onCheckedChange={(checked) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      recommended: checked === true,
+                    })
+                  }
+                />
+                <label
+                  htmlFor="recommended"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Destacado
+                </label>
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox
+                  id="active"
+                  checked={currentPlan.active}
+                  onCheckedChange={(checked) =>
+                    setCurrentPlan({
+                      ...currentPlan,
+                      active: checked === true,
+                    })
+                  }
+                />
+                <label
+                  htmlFor="active"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Activo
+                </label>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Add Plan Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Añadir Plan</DialogTitle>
-            <DialogDescription>
-              Añade un nuevo plan a tu catálogo de servicios
-            </DialogDescription>
-          </DialogHeader>
-          <PlanForm 
-            planType={type}
-            onSubmit={handleCreatePlan}
-            onCancel={() => setIsAddDialogOpen(false)}
-            isSubmitting={isCreating}
-          />
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
+              <Textarea
+                id="description"
+                value={currentPlan.description}
+                onChange={(e) =>
+                  setCurrentPlan({
+                    ...currentPlan,
+                    description: e.target.value,
+                  })
+                }
+                rows={3}
+                required
+              />
+            </div>
+            <div className="mt-4">
+              <Label>Características</Label>
+              <div className="flex mt-1 mb-2">
+                <Input
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  placeholder="Nueva característica"
+                  className="mr-2"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddFeature}
+                  variant="secondary"
+                >
+                  Añadir
+                </Button>
+              </div>
+              <div className="border rounded-md p-2 min-h-[100px] max-h-[200px] overflow-y-auto">
+                {currentPlan.features && currentPlan.features.length > 0 ? (
+                  <ul className="space-y-1">
+                    {currentPlan.features.map((feature, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between p-1 hover:bg-muted/50 rounded"
+                      >
+                        <span>{feature}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveFeature(index)}
+                          className="h-6 w-6 text-red-500"
+                        >
+                          <X size={16} />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center text-muted-foreground p-4">
+                    No hay características añadidas
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">
+                {editingPlan ? "Actualizar" : "Crear"} Plan
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
-      
-      {/* Edit Plan Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Plan</DialogTitle>
-            <DialogDescription>
-              Modifica los detalles del plan seleccionado
-            </DialogDescription>
-          </DialogHeader>
-          <PlanForm 
-            initialPlan={selectedPlan}
-            planType={type}
-            onSubmit={handleUpdatePlan}
-            onCancel={() => setIsEditDialogOpen(false)}
-            isSubmitting={isUpdating}
-          />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Plan Dialog */}
+
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
+            <DialogTitle className="flex items-center text-red-500">
+              <AlertTriangle className="mr-2 h-5 w-5" />
+              Confirmar eliminación
+            </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar el plan "{selectedPlan?.name}"? Esta acción no se puede deshacer.
+              ¿Estás seguro de que quieres eliminar el plan <span className="font-semibold">{editingPlan?.name}</span>? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeletePlan} disabled={isDeleting}>
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Eliminando...
-                </>
-              ) : (
-                'Eliminar Plan'
-              )}
+            <Button
+              variant="destructive"
+              onClick={() => editingPlan?.id && deleteMutation.mutate(editingPlan.id)}
+            >
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>

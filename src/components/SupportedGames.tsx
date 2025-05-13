@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { publicApi } from "@/lib/api";
 
@@ -8,78 +7,54 @@ interface Game {
   description: string;
 }
 
+const fallbackGames: Game[] = [
+  {
+    name: "Minecraft",
+    logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
+    description: "Java y Bedrock"
+  },
+  {
+    name: "Garry's Mod",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Garry%27s_Mod_logo.svg/2048px-Garry%27s_Mod_logo.svg.png",
+    description: "Servidores rápidos y eficientes"
+  },
+  {
+    name: "Counter-Strike 2",
+    logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
+    description: "Para comunidades y equipos"
+  },
+  {
+    name: "Team Fortress 2",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
+    description: "Servidores personalizables"
+  },
+  {
+    name: "ARK: Survival Evolved",
+    logo: "https://upload.wikimedia.org/wikipedia/fr/7/7d/Ark_Survival_Evolved_Logo.png",
+    description: "Alto rendimiento garantizado"
+  }
+];
+
 const SupportedGames: React.FC = () => {
-  const [games, setGames] = useState<Game[]>([]);
+  const [games, setGames] = useState<Game[]>(fallbackGames);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
         const gamesData = await publicApi.getGames();
-        // Ensure gamesData is an array before setting it
-        if (Array.isArray(gamesData)) {
+        console.log("Games data received:", gamesData);
+        
+        // Check if gamesData is an array and has items
+        if (Array.isArray(gamesData) && gamesData.length > 0) {
           setGames(gamesData);
         } else {
-          console.error("API returned non-array games data:", gamesData);
-          // Fallback to static games if API returns non-array
-          setGames([
-            {
-              name: "Minecraft",
-              logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
-              description: "Java y Bedrock"
-            },
-            {
-              name: "Garry's Mod",
-              logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Garry%27s_Mod_logo.svg/2048px-Garry%27s_Mod_logo.svg.png",
-              description: "Servidores rápidos y eficientes"
-            },
-            {
-              name: "Counter-Strike 2",
-              logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
-              description: "Para comunidades y equipos"
-            },
-            {
-              name: "Team Fortress 2",
-              logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
-              description: "Servidores personalizables"
-            },
-            {
-              name: "ARK: Survival Evolved",
-              logo: "https://upload.wikimedia.org/wikipedia/fr/7/7d/Ark_Survival_Evolved_Logo.png",
-              description: "Alto rendimiento garantizado"
-            }
-          ]);
+          console.warn("API returned invalid games data, using fallback");
+          // Keep the fallback games that were set in useState
         }
       } catch (error) {
         console.error("Error loading games:", error);
-        // Fallback to static games if API fails
-        setGames([
-          {
-            name: "Minecraft",
-            logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
-            description: "Java y Bedrock"
-          },
-          {
-            name: "Garry's Mod",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Garry%27s_Mod_logo.svg/2048px-Garry%27s_Mod_logo.svg.png",
-            description: "Servidores rápidos y eficientes"
-          },
-          {
-            name: "Counter-Strike 2",
-            logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
-            description: "Para comunidades y equipos"
-          },
-          {
-            name: "Team Fortress 2",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
-            description: "Servidores personalizables"
-          },
-          {
-            name: "ARK: Survival Evolved",
-            logo: "https://upload.wikimedia.org/wikipedia/fr/7/7d/Ark_Survival_Evolved_Logo.png",
-            description: "Alto rendimiento garantizado"
-          }
-        ]);
+        // Fallback games are already set in the initial state
       } finally {
         setLoading(false);
       }
@@ -113,6 +88,9 @@ const SupportedGames: React.FC = () => {
     );
   }
 
+  // Extra safety check before rendering
+  const displayGames = Array.isArray(games) ? games : fallbackGames;
+
   return (
     <section className="py-16 md:py-20 bg-muted/30 dark:bg-muted/10">
       <div className="container">
@@ -124,7 +102,7 @@ const SupportedGames: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-5">
-          {games.map((game, index) => (
+          {displayGames.map((game, index) => (
             <div 
               key={index} 
               className="flex flex-col items-center rounded-lg border bg-card dark:bg-card/50 p-6 text-center transition-all hover:shadow-lg overflow-hidden relative group"

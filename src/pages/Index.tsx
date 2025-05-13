@@ -22,14 +22,25 @@ const Index: React.FC = () => {
 
   // Use the public API to get the plans for the homepage
   const [plans, setPlans] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const loadPlans = async () => {
       try {
         const plansData = await publicApi.getPlans('hosting');
-        setPlans(plansData);
+        // Make sure plansData is an array
+        if (Array.isArray(plansData)) {
+          setPlans(plansData);
+        } else {
+          console.error('API did not return an array for plans:', plansData);
+          // Set to empty array instead of undefined
+          setPlans([]);
+        }
       } catch (error) {
         console.error('Error loading plans:', error);
+        setPlans([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -81,7 +92,10 @@ const Index: React.FC = () => {
             <PlanCarousel />
           </div>
 
-          <PlanComparison plans={plans} />
+          {/* Only render PlanComparison if we have plans or if loading is complete */}
+          {(!isLoading) && (
+            <PlanComparison plans={Array.isArray(plans) ? plans : []} />
+          )}
         </div>
       </section>
 
