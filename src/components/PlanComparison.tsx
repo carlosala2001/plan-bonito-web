@@ -36,6 +36,9 @@ interface PlanComparisonProps {
 }
 
 const PlanComparison: React.FC<PlanComparisonProps> = ({ plans = [] }) => {
+  // Ensure plans is always an array
+  const plansList = Array.isArray(plans) ? plans : [];
+  
   return (
     <div className="w-full">
       <Tabs defaultValue="specs" className="w-full">
@@ -59,7 +62,7 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({ plans = [] }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plans.map((plan, index) => (
+              {plansList.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
                   <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell>{plan.resources.cpu.value} {plan.resources.cpu.unit}</TableCell>
@@ -94,7 +97,7 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({ plans = [] }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plans.map((plan, index) => (
+              {plansList.map((plan, index) => (
                 <TableRow key={index} className={plan.highlight ? "bg-primary/5" : ""}>
                   <TableCell className="font-medium whitespace-nowrap">{plan.name}</TableCell>
                   <TableCell className="max-w-[300px] whitespace-normal">{plan.description.idealFor}</TableCell>

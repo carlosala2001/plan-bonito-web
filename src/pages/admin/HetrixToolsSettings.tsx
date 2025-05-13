@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ctrlPanelApi } from "@/lib/api";
+import { hetrixToolsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { Globe, ShieldCheck, AlertTriangle } from "lucide-react";
 
@@ -16,11 +16,11 @@ const HetrixToolsSettings = () => {
 
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
     queryKey: ['hetrixtools-settings'],
-    queryFn: ctrlPanelApi.getHetrixToolsSettings,
+    queryFn: hetrixToolsApi.getHetrixToolsSettings,
   });
 
   const { mutate: saveApiKey, isPending: isSaving } = useMutation({
-    mutationFn: ctrlPanelApi.saveHetrixToolsApiKey,
+    mutationFn: hetrixToolsApi.saveHetrixToolsApiKey,
     onSuccess: () => {
       toast.success("API Key guardada correctamente");
       queryClient.invalidateQueries({ queryKey: ['hetrixtools-settings'] });
@@ -43,7 +43,7 @@ const HetrixToolsSettings = () => {
         return;
       }
       
-      await ctrlPanelApi.testHetrixToolsConnection(keyToTest);
+      await hetrixToolsApi.testHetrixToolsConnection(keyToTest);
       toast.success("Conexión exitosa con HetrixTools");
     } catch (error) {
       toast.error("Error al conectar con HetrixTools");

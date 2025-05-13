@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { toast } from "sonner";
 
@@ -530,4 +529,3 @@ export const publicApi = {
     }
   }
 };
-
