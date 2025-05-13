@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { toast } from "sonner";
 
@@ -125,49 +124,6 @@ export const ctrlPanelApi = {
     }
   },
   
-  // Node management
-  getNodes: async () => {
-    try {
-      const response = await api.get('/admin/nodes');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching nodes:', error);
-      throw error;
-    }
-  },
-  
-  createNode: async (nodeData: { name: string; location: string; latitude: number; longitude: number }) => {
-    try {
-      const response = await api.post('/admin/nodes', nodeData);
-      toast.success('Nodo creado correctamente');
-      return response.data;
-    } catch (error) {
-      console.error('Error creating node:', error);
-      throw error;
-    }
-  },
-  
-  deleteNode: async (id: number) => {
-    try {
-      const response = await api.delete(`/admin/nodes/${id}`);
-      toast.success('Nodo eliminado correctamente');
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting node:', error);
-      throw error;
-    }
-  },
-  
-  updateNodeStatus: async (id: number, status: string) => {
-    try {
-      const response = await api.put(`/admin/nodes/${id}/status`, { status });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating node status:', error);
-      throw error;
-    }
-  },
-  
   // HetrixTools API settings
   getHetrixToolsSettings: async () => {
     try {
@@ -182,10 +138,19 @@ export const ctrlPanelApi = {
   saveHetrixToolsApiKey: async (apiKey: string) => {
     try {
       const response = await api.post('/admin/hetrixtools-settings', { apiKey });
-      toast.success('Clave API de HetrixTools guardada correctamente');
       return response.data;
     } catch (error) {
       console.error('Error saving HetrixTools API Key:', error);
+      throw error;
+    }
+  },
+  
+  testHetrixToolsConnection: async (apiKey: string) => {
+    try {
+      const response = await api.post('/admin/hetrixtools/test-connection', { apiKey });
+      return response.data;
+    } catch (error) {
+      console.error('Error testing HetrixTools connection:', error);
       throw error;
     }
   },
@@ -196,6 +161,17 @@ export const ctrlPanelApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching HetrixTools monitors:', error);
+      throw error;
+    }
+  },
+  
+  // Node management endpoints
+  getNodes: async () => {
+    try {
+      const response = await api.get('/admin/nodes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching nodes:', error);
       throw error;
     }
   },

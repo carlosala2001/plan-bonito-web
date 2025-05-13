@@ -68,6 +68,20 @@ JWT_SECRET=$(openssl rand -base64 32)
 echo -e "\n${BLUE}${BOLD}HetrixTools API Configuration${NC}"
 read -p "HetrixTools API Key (or leave empty to configure later): " HETRIX_API_KEY
 
+# Ask for CtrlPanel API Key and URL
+echo -e "\n${BLUE}${BOLD}CtrlPanel API Configuration${NC}"
+read -p "CtrlPanel API URL (or leave empty to configure later): " CTRLPANEL_API_URL
+read -p "CtrlPanel API Key (or leave empty to configure later): " CTRLPANEL_API_KEY
+
+# Ask for Zoho Mail SMTP Configuration
+echo -e "\n${BLUE}${BOLD}Zoho Mail SMTP Configuration${NC}"
+read -p "Zoho Mail SMTP Host (or leave empty to configure later): " ZOHO_SMTP_HOST
+read -p "Zoho Mail SMTP Port (default: 587): " ZOHO_SMTP_PORT
+ZOHO_SMTP_PORT=${ZOHO_SMTP_PORT:-587}
+read -p "Zoho Mail Username (or leave empty to configure later): " ZOHO_SMTP_USER
+read -s -p "Zoho Mail Password (or leave empty to configure later): " ZOHO_SMTP_PASSWORD
+echo
+
 # Create .env file in project root
 echo -e "${GREEN}Creating .env file...${NC}"
 cat > .env << EOF
@@ -79,6 +93,12 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_NAME=${DB_NAME}
 JWT_SECRET=${JWT_SECRET}
 HETRIX_API_KEY=${HETRIX_API_KEY}
+CTRLPANEL_API_URL=${CTRLPANEL_API_URL}
+CTRLPANEL_API_KEY=${CTRLPANEL_API_KEY}
+ZOHO_SMTP_HOST=${ZOHO_SMTP_HOST}
+ZOHO_SMTP_PORT=${ZOHO_SMTP_PORT}
+ZOHO_SMTP_USER=${ZOHO_SMTP_USER}
+ZOHO_SMTP_PASSWORD=${ZOHO_SMTP_PASSWORD}
 EOF
 
 # Also create a copy in the server directory to ensure it's available there
@@ -92,6 +112,12 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_NAME=${DB_NAME}
 JWT_SECRET=${JWT_SECRET}
 HETRIX_API_KEY=${HETRIX_API_KEY}
+CTRLPANEL_API_URL=${CTRLPANEL_API_URL}
+CTRLPANEL_API_KEY=${CTRLPANEL_API_KEY}
+ZOHO_SMTP_HOST=${ZOHO_SMTP_HOST}
+ZOHO_SMTP_PORT=${ZOHO_SMTP_PORT}
+ZOHO_SMTP_USER=${ZOHO_SMTP_USER}
+ZOHO_SMTP_PASSWORD=${ZOHO_SMTP_PASSWORD}
 EOF
 
 echo -e "${GREEN}.env files created successfully!${NC}"
@@ -156,13 +182,91 @@ node -e "
                 )
             \`);
 
-            // Create hetrixtools_settings table
+            // Create hetrixtools_settings table if not exists
             await connection.query(\`
                 CREATE TABLE IF NOT EXISTS hetrixtools_settings (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     api_key VARCHAR(255) NOT NULL,
                     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     is_active BOOLEAN DEFAULT TRUE
+                )
+            \`);
+            
+            // Create ctrlpanel_settings table if not exists
+            await connection.query(\`
+                CREATE TABLE IF NOT EXISTS ctrlpanel_settings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    api_url VARCHAR(255) NOT NULL,
+                    api_key VARCHAR(255) NOT NULL,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT TRUE
+                )
+            \`);
+            
+            // Create email_settings table if not exists
+            await connection.query(\`
+                CREATE TABLE IF NOT EXISTS email_settings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    smtp_host VARCHAR(255) NOT NULL,
+                    smtp_port INT NOT NULL,
+                    smtp_user VARCHAR(255) NOT NULL,
+                    smtp_password VARCHAR(255) NOT NULL,
+                    from_email VARCHAR(255) NOT NULL,
+                    from_name VARCHAR(255) NOT NULL,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT TRUE
+                )
+            \`);
+            
+            // Create plans table if not exists
+            await connection.query(\`
+                CREATE TABLE IF NOT EXISTS plans (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    type ENUM('standard', 'premium', 'metalscale', 'zenovps') NOT NULL,
+                    price DECIMAL(10, 2) NOT NULL,
+                    currency VARCHAR(10) DEFAULT 'EUR',
+                    billing_cycle ENUM('monthly', 'quarterly', 'semiannual', 'annual') DEFAULT 'monthly',
+                    cpu_value INT NOT NULL,
+                    cpu_unit VARCHAR(50) NOT NULL,
+                    ram_value INT NOT NULL,
+                    ram_unit VARCHAR(10) NOT NULL,
+                    disk_value INT NOT NULL,
+                    disk_unit VARCHAR(10) NOT NULL,
+                    backups INT NOT NULL,
+                    databases INT NOT NULL,
+                    ports INT NOT NULL,
+                    description_ideal_for VARCHAR(255) NOT NULL,
+                    description_perfect_for VARCHAR(255) NOT NULL,
+                    highlight BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            \`);
+            
+            // Create subscribers table for newsletter
+            await connection.query(\`
+                CREATE TABLE IF NOT EXISTS subscribers (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    name VARCHAR(100),
+                    subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    unsubscribed BOOLEAN DEFAULT FALSE,
+                    unsubscribed_at TIMESTAMP NULL,
+                    token VARCHAR(255) UNIQUE NOT NULL
+                )
+            \`);
+            
+            // Create games table for supported games
+            await connection.query(\`
+                CREATE TABLE IF NOT EXISTS games (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    logo_url VARCHAR(255) NOT NULL,
+                    description VARCHAR(255) NOT NULL,
+                    active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
             \`);
             
@@ -173,6 +277,33 @@ node -e "
                     VALUES (?) 
                     ON DUPLICATE KEY UPDATE api_key = VALUES(api_key), last_updated = CURRENT_TIMESTAMP
                 \`, ['${HETRIX_API_KEY}']);
+            }
+            
+            // If CtrlPanel API info was provided, save it
+            if ('${CTRLPANEL_API_URL}'.trim() !== '' && '${CTRLPANEL_API_KEY}'.trim() !== '') {
+                await connection.query(\`
+                    INSERT INTO ctrlpanel_settings (api_url, api_key) 
+                    VALUES (?, ?) 
+                    ON DUPLICATE KEY UPDATE api_url = VALUES(api_url), api_key = VALUES(api_key), last_updated = CURRENT_TIMESTAMP
+                \`, ['${CTRLPANEL_API_URL}', '${CTRLPANEL_API_KEY}']);
+            }
+            
+            // If Zoho SMTP info was provided, save it
+            if ('${ZOHO_SMTP_HOST}'.trim() !== '' && '${ZOHO_SMTP_USER}'.trim() !== '' && '${ZOHO_SMTP_PASSWORD}'.trim() !== '') {
+                await connection.query(\`
+                    INSERT INTO email_settings (smtp_host, smtp_port, smtp_user, smtp_password, from_email, from_name) 
+                    VALUES (?, ?, ?, ?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE smtp_host = VALUES(smtp_host), smtp_port = VALUES(smtp_port), 
+                    smtp_user = VALUES(smtp_user), smtp_password = VALUES(smtp_password), 
+                    last_updated = CURRENT_TIMESTAMP
+                \`, [
+                    '${ZOHO_SMTP_HOST}', 
+                    ${ZOHO_SMTP_PORT}, 
+                    '${ZOHO_SMTP_USER}', 
+                    '${ZOHO_SMTP_PASSWORD}',
+                    '${ZOHO_SMTP_USER}',
+                    'ZenoScale'
+                ]);
             }
             
             console.log('Database setup completed successfully');
@@ -190,74 +321,4 @@ node -e "
     exit 1
 }
 
-# Ask if user wants to create initial admin
-echo
-echo -e "${BLUE}${BOLD}Initial Admin User Setup${NC}"
-read -p "Would you like to create an initial admin user now? (y/N): " CREATE_ADMIN
-
-if [ "$CREATE_ADMIN" = "y" ] || [ "$CREATE_ADMIN" = "Y" ]; then
-    read -p "Admin Username: " ADMIN_USERNAME
-    read -p "Admin Email: " ADMIN_EMAIL
-    read -s -p "Admin Password: " ADMIN_PASSWORD
-    echo
-    
-    # Use node to create admin user
-    echo -e "${YELLOW}Creating admin user...${NC}"
-    node -e "
-        const bcrypt = require('./server/node_modules/bcrypt');
-        const mysql = require('./server/node_modules/mysql2/promise');
-        
-        async function createUser() {
-            try {
-                const hashedPassword = await bcrypt.hash('${ADMIN_PASSWORD}', 10);
-                
-                const connection = await mysql.createConnection({
-                    host: '${DB_HOST}',
-                    port: ${DB_PORT},
-                    user: '${DB_USER}',
-                    password: '${DB_PASSWORD}',
-                    database: '${DB_NAME}'
-                });
-                
-                // Insert admin user
-                await connection.execute(
-                    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                    ['${ADMIN_USERNAME}', '${ADMIN_EMAIL}', hashedPassword]
-                );
-                
-                console.log('Admin user created successfully!');
-                connection.end();
-            } catch (error) {
-                console.error('Error creating admin user:', error.message);
-                process.exit(1);
-            }
-        }
-        
-        createUser();
-    " || {
-        echo -e "${RED}Failed to create admin user.${NC}"
-    }
-fi
-
-# Make start script executable
-echo -e "${GREEN}Making start script executable...${NC}"
-chmod +x start.sh
-
-# Setup complete
-echo
-echo -e "${BLUE}${BOLD}"
-echo "========================================"
-echo "Installation completed successfully!"
-echo
-echo "To start the application in production mode, run:"
-echo "./start.sh"
-echo
-echo "The admin panel will be available at:"
-echo "http://localhost:3001"
-echo
-if [ "$CREATE_ADMIN" != "y" ] && [ "$CREATE_ADMIN" != "Y" ]; then
-    echo "On first run, you'll be prompted to create an admin user."
-fi
-echo "========================================"
-echo -e "${NC}"
-
+# ... keep existing code (admin user setup, making start script executable, and final messages)

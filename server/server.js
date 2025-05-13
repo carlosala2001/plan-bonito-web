@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -289,6 +288,38 @@ app.post('/api/admin/hetrixtools-settings', authenticateToken, async (req, res) 
   } catch (error) {
     console.error('Error saving HetrixTools API Key:', error);
     res.status(500).json({ error: 'Error saving HetrixTools API Key' });
+  }
+});
+
+// Add new endpoint to test HetrixTools connection
+app.post('/api/admin/hetrixtools/test-connection', authenticateToken, async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    
+    if (!apiKey) {
+      return res.status(400).json({ error: 'API Key is required' });
+    }
+    
+    try {
+      // Test connection by making a request to the HetrixTools API
+      const response = await axios.get('https://api.hetrixtools.com/v1/uptime/monitors/', {
+        params: {
+          token: apiKey,
+        }
+      });
+      
+      if (response.status === 200) {
+        res.json({ success: true, message: 'Connection successful' });
+      } else {
+        res.status(400).json({ error: 'Invalid API Key or connection failed' });
+      }
+    } catch (error) {
+      console.error('Error testing HetrixTools connection:', error);
+      res.status(400).json({ error: 'Invalid API Key or connection failed' });
+    }
+  } catch (error) {
+    console.error('Error testing HetrixTools connection:', error);
+    res.status(500).json({ error: 'Server error testing connection' });
   }
 });
 
