@@ -1,337 +1,294 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useParams } from 'react-router-dom';
-import { plansApi } from '@/lib/api';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { CheckCircle, PlusCircle, FileEdit, Trash2, Loader2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { plansApi } from "@/lib/api";
+import { toast } from "sonner";
+import { PlusCircle, FileEdit, Trash2, Loader2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PlanFormProps {
-  initialData?: any;
+  initialPlan?: any;
+  planType: string;
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
 
-const PlanForm: React.FC<PlanFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    price: 0,
-    type: 'hosting',
-    resources: {
-      cpu: { value: '1', unit: 'vCores' },
-      ram: { value: 1024, unit: 'MB' },
-      disk: { value: 5120, unit: 'MB' },
-      backups: 1,
-      databases: 1,
-      ports: 1
-    },
-    billing: 'por Mes',
-    minCredits: 10000,
-    description: {
-      idealFor: '',
-      perfectFor: ''
-    },
-    highlight: false
+interface PlanType {
+  id?: number;
+  name: string;
+  price: number;
+  interval: string;
+  type: string;
+  popular?: boolean;
+  features?: string[];
+  description?: string;
+  cpu?: string;
+  ram?: string;
+  storage?: string;
+  bandwidth?: string;
+  backups?: string;
+  databases?: string;
+  ddos_protection?: boolean;
+  order?: number;
+}
+
+const PlanForm: React.FC<PlanFormProps> = ({ initialPlan, planType, onSubmit, onCancel, isSubmitting }) => {
+  const [plan, setPlan] = useState<PlanType>({
+    name: initialPlan?.name || "",
+    price: initialPlan?.price || 0,
+    interval: initialPlan?.interval || "monthly",
+    type: planType,
+    popular: initialPlan?.popular || false,
+    description: initialPlan?.description || "",
+    features: initialPlan?.features || [],
+    cpu: initialPlan?.cpu || "",
+    ram: initialPlan?.ram || "",
+    storage: initialPlan?.storage || "",
+    bandwidth: initialPlan?.bandwidth || "",
+    backups: initialPlan?.backups || "Daily",
+    databases: initialPlan?.databases || "Unlimited",
+    ddos_protection: initialPlan?.ddos_protection || true,
+    order: initialPlan?.order || 0,
   });
-
-  useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    }
-  }, [initialData]);
-
+  
+  const [featureInput, setFeatureInput] = useState("");
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target as HTMLInputElement;
     
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: value
-        }
-      }));
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setPlan({ ...plan, [name]: checked });
+    } else if (type === 'number') {
+      setPlan({ ...plan, [name]: parseFloat(value) });
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setPlan({ ...plan, [name]: value });
     }
   };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: Number(value)
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: Number(value)
-      }));
+  
+  const handleSelectChange = (value: string, name: string) => {
+    setPlan({ ...plan, [name]: value });
+  };
+  
+  const handleAddFeature = () => {
+    if (featureInput.trim()) {
+      setPlan({
+        ...plan,
+        features: [...(plan.features || []), featureInput.trim()]
+      });
+      setFeatureInput("");
     }
   };
-
-  const handleResourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const [_, resource, property] = name.split('.');
-    
-    setFormData(prev => ({
-      ...prev,
-      resources: {
-        ...prev.resources,
-        [resource]: {
-          ...prev.resources[resource as keyof typeof prev.resources],
-          [property]: property === 'value' && resource !== 'cpu' ? Number(value) : value
-        }
-      }
-    }));
+  
+  const handleRemoveFeature = (index: number) => {
+    const newFeatures = [...(plan.features || [])];
+    newFeatures.splice(index, 1);
+    setPlan({ ...plan, features: newFeatures });
   };
-
-  const handleSelectChange = (value: string, fieldName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.SyntheticEvent) => {
+  
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Include the ID if we're editing
+    const submitData = initialPlan?.id 
+      ? { ...plan, id: initialPlan.id }
+      : plan;
+    onSubmit(submitData);
   };
-
-  const handleToggleHighlight = () => {
-    setFormData(prev => ({
-      ...prev,
-      highlight: !prev.highlight
-    }));
-  };
-
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">Nombre del Plan</Label>
-          <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+          <Input id="name" name="name" value={plan.name} onChange={handleChange} required />
         </div>
-        
         <div>
           <Label htmlFor="price">Precio (€)</Label>
           <Input 
             id="price" 
             name="price" 
             type="number" 
+            min="0" 
             step="0.01" 
-            value={formData.price} 
-            onChange={handleNumberChange} 
+            value={plan.price} 
+            onChange={handleChange} 
             required 
           />
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="type">Tipo de Plan</Label>
-          <Select value={formData.type} onValueChange={(value) => handleSelectChange(value, 'type')}>
+          <Label htmlFor="interval">Intervalo de Facturación</Label>
+          <Select 
+            value={plan.interval}
+            onValueChange={(value) => handleSelectChange(value, 'interval')}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Seleccionar tipo" />
+              <SelectValue placeholder="Seleccionar intervalo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="hosting">Hosting (Game Servers)</SelectItem>
-              <SelectItem value="vps">VPS (Servidores Virtuales)</SelectItem>
-              <SelectItem value="metal">Metal (Servidores Dedicados)</SelectItem>
+              <SelectItem value="monthly">Mensual</SelectItem>
+              <SelectItem value="quarterly">Trimestral</SelectItem>
+              <SelectItem value="semiannual">Semestral</SelectItem>
+              <SelectItem value="annual">Anual</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        
-        <div>
-          <Label htmlFor="billing">Facturación</Label>
-          <Input id="billing" name="billing" value={formData.billing} onChange={handleChange} />
+        <div className="flex items-end">
+          <div className="flex items-center h-10 space-x-2">
+            <input 
+              type="checkbox" 
+              id="popular" 
+              name="popular"
+              className="w-4 h-4 rounded border-gray-300" 
+              checked={plan.popular}
+              onChange={handleChange}
+            />
+            <Label htmlFor="popular">Plan Popular</Label>
+          </div>
         </div>
-        
+      </div>
+      
+      <div>
+        <Label htmlFor="description">Descripción</Label>
+        <Textarea 
+          id="description" 
+          name="description" 
+          value={plan.description || ""} 
+          onChange={handleChange} 
+          rows={2}
+        />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="minCredits">Créditos Mínimos</Label>
+          <Label htmlFor="cpu">CPU</Label>
+          <Input id="cpu" name="cpu" value={plan.cpu} onChange={handleChange} />
+        </div>
+        <div>
+          <Label htmlFor="ram">RAM</Label>
+          <Input id="ram" name="ram" value={plan.ram} onChange={handleChange} />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="storage">Almacenamiento</Label>
+          <Input id="storage" name="storage" value={plan.storage} onChange={handleChange} />
+        </div>
+        <div>
+          <Label htmlFor="bandwidth">Ancho de Banda</Label>
+          <Input id="bandwidth" name="bandwidth" value={plan.bandwidth} onChange={handleChange} />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="backups">Copias de Seguridad</Label>
+          <Select 
+            value={plan.backups}
+            onValueChange={(value) => handleSelectChange(value, 'backups')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Seleccionar frecuencia" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Daily">Diarias</SelectItem>
+              <SelectItem value="Weekly">Semanales</SelectItem>
+              <SelectItem value="None">Ninguna</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="databases">Bases de Datos</Label>
+          <Input id="databases" name="databases" value={plan.databases} onChange={handleChange} />
+        </div>
+        <div className="flex items-end">
+          <div className="flex items-center h-10 space-x-2">
+            <input 
+              type="checkbox" 
+              id="ddos_protection" 
+              name="ddos_protection"
+              className="w-4 h-4 rounded border-gray-300" 
+              checked={plan.ddos_protection}
+              onChange={handleChange}
+            />
+            <Label htmlFor="ddos_protection">Protección DDoS</Label>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <Label>Características</Label>
+        <div className="flex gap-2 mb-2">
           <Input 
-            id="minCredits" 
-            name="minCredits" 
-            type="number" 
-            value={formData.minCredits} 
-            onChange={handleNumberChange} 
+            value={featureInput}
+            onChange={(e) => setFeatureInput(e.target.value)}
+            placeholder="Nueva característica"
           />
+          <Button type="button" onClick={handleAddFeature} variant="outline">Agregar</Button>
         </div>
-      </div>
-
-      <div className="bg-muted/30 p-4 rounded-md">
-        <h3 className="font-medium mb-3">Recursos</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <Label htmlFor="resources.cpu.value">CPU (valor)</Label>
-            <Input 
-              id="resources.cpu.value" 
-              name="resources.cpu.value" 
-              value={formData.resources.cpu.value} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="resources.cpu.unit">CPU (unidad)</Label>
-            <Input 
-              id="resources.cpu.unit" 
-              name="resources.cpu.unit" 
-              value={formData.resources.cpu.unit} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <Label htmlFor="resources.ram.value">RAM (valor)</Label>
-            <Input 
-              id="resources.ram.value" 
-              name="resources.ram.value" 
-              type="number" 
-              value={formData.resources.ram.value} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="resources.ram.unit">RAM (unidad)</Label>
-            <Input 
-              id="resources.ram.unit" 
-              name="resources.ram.unit" 
-              value={formData.resources.ram.unit} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <Label htmlFor="resources.disk.value">Disco (valor)</Label>
-            <Input 
-              id="resources.disk.value" 
-              name="resources.disk.value" 
-              type="number" 
-              value={formData.resources.disk.value} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="resources.disk.unit">Disco (unidad)</Label>
-            <Input 
-              id="resources.disk.unit" 
-              name="resources.disk.unit" 
-              value={formData.resources.disk.unit} 
-              onChange={handleResourceChange} 
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="resources.backups">Copias de Seguridad</Label>
-            <Input 
-              id="resources.backups" 
-              name="resources.backups" 
-              type="number" 
-              value={formData.resources.backups} 
-              onChange={handleNumberChange} 
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="resources.databases">Bases de Datos</Label>
-            <Input 
-              id="resources.databases" 
-              name="resources.databases" 
-              type="number" 
-              value={formData.resources.databases} 
-              onChange={handleNumberChange} 
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="resources.ports">Puertos</Label>
-            <Input 
-              id="resources.ports" 
-              name="resources.ports" 
-              type="number" 
-              value={formData.resources.ports} 
-              onChange={handleNumberChange} 
-            />
-          </div>
+        <div className="border rounded-md p-3 bg-muted/20">
+          {!plan.features?.length && (
+            <p className="text-muted-foreground text-center py-2 text-sm">No hay características agregadas</p>
+          )}
+          <ul className="space-y-1">
+            {plan.features?.map((feature, index) => (
+              <li key={index} className="flex justify-between items-center bg-background rounded p-2">
+                <span>{feature}</span>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={() => handleRemoveFeature(index)} 
+                  className="h-7 w-7"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="description.idealFor">Ideal Para</Label>
-          <Textarea 
-            id="description.idealFor" 
-            name="description.idealFor" 
-            value={formData.description.idealFor} 
-            onChange={handleChange}
-            rows={2}
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="description.perfectFor">Perfecto Para</Label>
-          <Textarea 
-            id="description.perfectFor" 
-            name="description.perfectFor" 
-            value={formData.description.perfectFor} 
-            onChange={handleChange}
-            rows={2}
-          />
-        </div>
+      <div>
+        <Label htmlFor="order">Orden</Label>
+        <Input 
+          id="order" 
+          name="order" 
+          type="number" 
+          min="0" 
+          value={plan.order} 
+          onChange={handleChange}
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Determina el orden de visualización (menor número primero)
+        </p>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <Button 
-          type="button" 
-          variant={formData.highlight ? "default" : "outline"} 
-          onClick={handleToggleHighlight}
-          className={formData.highlight ? "bg-primary" : ""}
-        >
-          <CheckCircle className={`mr-2 h-4 w-4 ${formData.highlight ? "" : "text-muted-foreground"}`} />
-          Plan Destacado
+      <DialogFooter className="mt-6">
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Cancelar
         </Button>
-      </div>
-      
-      <DialogFooter>
-        <Button variant="outline" type="button" onClick={onCancel}>Cancelar</Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Guardando...
+              {initialPlan ? "Actualizando..." : "Guardando..."}
             </>
           ) : (
-            'Guardar Plan'
+            initialPlan ? "Actualizar Plan" : "Guardar Plan"
           )}
         </Button>
       </DialogFooter>
@@ -340,102 +297,112 @@ const PlanForm: React.FC<PlanFormProps> = ({ initialData, onSubmit, onCancel, is
 };
 
 const PlansManager: React.FC = () => {
-  const { type = 'hosting' } = useParams<{ type?: string }>();
-  const [planType, setPlanType] = useState<'hosting' | 'vps' | 'metal'>(
-    type === 'vps' || type === 'metal' ? type : 'hosting'
-  );
+  const { type = 'hosting' } = useParams<{type?: string}>();
+  const navigate = useNavigate();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [search, setSearch] = useState("");
+  
   const queryClient = useQueryClient();
-
+  
   const { data: plans = [], isLoading } = useQuery({
-    queryKey: ['plans', planType],
-    queryFn: () => plansApi.getPlans(planType),
+    queryKey: ['plans', type],
+    queryFn: () => plansApi.getPlans(type as 'hosting' | 'vps' | 'metal'),
   });
-
+  
   const { mutate: createPlan, isPending: isCreating } = useMutation({
     mutationFn: plansApi.createPlan,
     onSuccess: () => {
-      toast.success('Plan creado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
+      toast.success("Plan añadido correctamente");
+      queryClient.invalidateQueries({ queryKey: ['plans', type] });
       setIsAddDialogOpen(false);
     },
     onError: (error) => {
-      console.error('Error creating plan:', error);
-      toast.error('Error al crear el plan');
-    },
+      toast.error("Error al añadir plan");
+      console.error("Error al añadir plan:", error);
+    }
   });
-
+  
   const { mutate: updatePlan, isPending: isUpdating } = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => plansApi.updatePlan(id, data),
+    mutationFn: plansApi.updatePlan,
     onSuccess: () => {
-      toast.success('Plan actualizado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
+      toast.success("Plan actualizado correctamente");
+      queryClient.invalidateQueries({ queryKey: ['plans', type] });
       setIsEditDialogOpen(false);
       setSelectedPlan(null);
     },
     onError: (error) => {
-      console.error('Error updating plan:', error);
-      toast.error('Error al actualizar el plan');
-    },
+      toast.error("Error al actualizar plan");
+      console.error("Error al actualizar plan:", error);
+    }
   });
-
+  
   const { mutate: deletePlan, isPending: isDeleting } = useMutation({
-    mutationFn: (id: number) => plansApi.deletePlan(id),
+    mutationFn: plansApi.deletePlan,
     onSuccess: () => {
-      toast.success('Plan eliminado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
+      toast.success("Plan eliminado correctamente");
+      queryClient.invalidateQueries({ queryKey: ['plans', type] });
       setIsDeleteDialogOpen(false);
       setSelectedPlan(null);
     },
     onError: (error) => {
-      console.error('Error deleting plan:', error);
-      toast.error('Error al eliminar el plan');
-    },
+      toast.error("Error al eliminar plan");
+      console.error("Error al eliminar plan:", error);
+    }
   });
-
-  const handleSubmitPlan = (data: any) => {
-    createPlan({
-      ...data,
-      type: planType
-    });
+  
+  const handleCreatePlan = (data: any) => {
+    createPlan(data);
   };
-
+  
   const handleUpdatePlan = (data: any) => {
-    if (!selectedPlan) return;
-    updatePlan({
-      id: selectedPlan.id,
-      data: {
-        ...data,
-        type: planType
-      }
-    });
+    if (data.id) {
+      updatePlan({ id: data.id, planData: data });
+    }
   };
-
+  
   const handleDeletePlan = () => {
-    if (!selectedPlan) return;
-    deletePlan(selectedPlan.id);
+    if (selectedPlan?.id) {
+      deletePlan(selectedPlan.id);
+    }
   };
-
+  
   const handleEditPlan = (plan: any) => {
     setSelectedPlan(plan);
     setIsEditDialogOpen(true);
   };
-
+  
   const handleDeleteClick = (plan: any) => {
     setSelectedPlan(plan);
     setIsDeleteDialogOpen(true);
   };
-
+  
+  const handleTypeChange = (newType: string) => {
+    navigate(`/admin/plans/${newType}`);
+  };
+  
+  const filteredPlans = Array.isArray(plans) 
+    ? plans.filter((plan: any) => 
+        plan.name?.toLowerCase().includes(search.toLowerCase()) || 
+        plan.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
+  
+  const typeNames = {
+    hosting: "Hosting de Juegos",
+    vps: "Servidores VPS",
+    metal: "Servidores Dedicados"
+  };
+  
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Planes</h1>
           <p className="text-muted-foreground">
-            Administra los planes de servicio que ofreces a tus clientes
+            Administra los planes que ofreces a tus clientes
           </p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
@@ -443,135 +410,188 @@ const PlansManager: React.FC = () => {
           Añadir Plan
         </Button>
       </div>
-
-      <Tabs defaultValue={planType} onValueChange={(value) => setPlanType(value as 'hosting' | 'vps' | 'metal')}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="hosting">Game Servers</TabsTrigger>
+      
+      <Tabs value={type} onValueChange={handleTypeChange} className="w-full">
+        <TabsList className="grid grid-cols-3 mb-8">
+          <TabsTrigger value="hosting">Hosting</TabsTrigger>
           <TabsTrigger value="vps">VPS</TabsTrigger>
           <TabsTrigger value="metal">Dedicados</TabsTrigger>
         </TabsList>
-
-        <TabsContent value={planType}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Planes de {planType === 'hosting' ? 'Game Servers' : planType === 'vps' ? 'VPS' : 'Servidores Dedicados'}</CardTitle>
-              <CardDescription>
-                Listado de planes disponibles y sus características
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : plans.length === 0 ? (
-                <div className="text-center py-8 border rounded-md">
-                  <p className="text-muted-foreground">No hay planes disponibles</p>
-                  <Button variant="outline" className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
-                    Añadir un plan
-                  </Button>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Precio</TableHead>
-                        <TableHead>CPU</TableHead>
-                        <TableHead>RAM</TableHead>
-                        <TableHead>Disco</TableHead>
-                        <TableHead>Destacado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Array.isArray(plans) && plans.map((plan) => (
-                        <TableRow key={plan.id} className={plan.highlight ? "bg-primary/5" : ""}>
-                          <TableCell className="font-medium">{plan.name}</TableCell>
-                          <TableCell>{plan.price} €</TableCell>
-                          <TableCell>{plan.resources.cpu.value} {plan.resources.cpu.unit}</TableCell>
-                          <TableCell>
-                            {typeof plan.resources.ram.value === 'number' && plan.resources.ram.value >= 1024 
-                              ? `${(plan.resources.ram.value / 1024).toFixed(1)} GB` 
-                              : `${plan.resources.ram.value} ${plan.resources.ram.unit}`}
-                          </TableCell>
-                          <TableCell>
-                            {typeof plan.resources.disk.value === 'number' && plan.resources.disk.value >= 1024 
-                              ? `${(plan.resources.disk.value / 1024).toFixed(1)} GB` 
-                              : `${plan.resources.disk.value} ${plan.resources.disk.unit}`}
-                          </TableCell>
-                          <TableCell>
-                            {plan.highlight ? (
-                              <CheckCircle className="h-5 w-5 text-primary" />
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleEditPlan(plan)}>
-                                <FileEdit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(plan)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
-
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{typeNames[type as keyof typeof typeNames] || "Planes"}</CardTitle>
+            <CardDescription>
+              Listado de planes de {typeNames[type as keyof typeof typeNames]?.toLowerCase() || "servicios"}
+            </CardDescription>
+          </div>
+          <div className="w-80">
+            <Input
+              placeholder="Buscar planes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredPlans.length === 0 ? (
+            <div className="text-center py-12 border rounded-md">
+              {search ? (
+                <p className="text-muted-foreground">No se encontraron planes que coincidan con tu búsqueda</p>
+              ) : (
+                <>
+                  <div className="mx-auto h-12 w-12 text-muted-foreground flex items-center justify-center border border-dashed rounded-full">
+                    <PlusCircle className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold">No hay planes configurados</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Añade algunos planes para mostrarlos en tu web
+                  </p>
+                  <Button onClick={() => setIsAddDialogOpen(true)} className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Añadir Plan
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Precio</TableHead>
+                    <TableHead>Recursos</TableHead>
+                    <TableHead>Popular</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPlans.map((plan: any) => (
+                    <TableRow key={plan.id}>
+                      <TableCell className="font-medium">
+                        {plan.name}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {plan.description ? (
+                            plan.description.length > 50 ? 
+                              `${plan.description.substring(0, 50)}...` : 
+                              plan.description
+                          ) : (
+                            'Sin descripción'
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {plan.price} € / {plan.interval === 'monthly' 
+                          ? 'mes' 
+                          : plan.interval === 'quarterly' 
+                            ? 'trimestre' 
+                            : plan.interval === 'semiannual' 
+                              ? 'semestre' 
+                              : 'año'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs">
+                          {plan.cpu && <div>CPU: {plan.cpu}</div>}
+                          {plan.ram && <div>RAM: {plan.ram}</div>}
+                          {plan.storage && <div>Almacenamiento: {plan.storage}</div>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {plan.popular ? (
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 rounded-full mr-2 bg-primary" />
+                            <span>Sí</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 rounded-full mr-2 bg-muted" />
+                            <span className="text-muted-foreground">No</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditPlan(plan)}
+                          >
+                            <FileEdit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteClick(plan)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
       {/* Add Plan Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-screen overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Añadir Nuevo Plan</DialogTitle>
+            <DialogTitle>Añadir Plan</DialogTitle>
             <DialogDescription>
-              Complete los detalles para crear un nuevo plan
+              Añade un nuevo plan a tu catálogo de servicios
             </DialogDescription>
           </DialogHeader>
           <PlanForm 
-            onSubmit={handleSubmitPlan}
+            planType={type}
+            onSubmit={handleCreatePlan}
             onCancel={() => setIsAddDialogOpen(false)}
             isSubmitting={isCreating}
           />
         </DialogContent>
       </Dialog>
-
+      
       {/* Edit Plan Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-screen overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar Plan</DialogTitle>
             <DialogDescription>
-              Modifique los detalles del plan seleccionado
+              Modifica los detalles del plan seleccionado
             </DialogDescription>
           </DialogHeader>
           <PlanForm 
-            initialData={selectedPlan}
+            initialPlan={selectedPlan}
+            planType={type}
             onSubmit={handleUpdatePlan}
             onCancel={() => setIsEditDialogOpen(false)}
             isSubmitting={isUpdating}
           />
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
+      
+      {/* Delete Plan Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar Eliminación</DialogTitle>
             <DialogDescription>
-              ¿Está seguro de que desea eliminar este plan? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar el plan "{selectedPlan?.name}"? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex items-center justify-between">
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancelar
             </Button>

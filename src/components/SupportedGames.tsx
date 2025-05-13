@@ -16,7 +16,40 @@ const SupportedGames: React.FC = () => {
     const fetchGames = async () => {
       try {
         const gamesData = await publicApi.getGames();
-        setGames(gamesData);
+        // Ensure gamesData is an array before setting it
+        if (Array.isArray(gamesData)) {
+          setGames(gamesData);
+        } else {
+          console.error("API returned non-array games data:", gamesData);
+          // Fallback to static games if API returns non-array
+          setGames([
+            {
+              name: "Minecraft",
+              logo: "https://cdn.freebiesupply.com/logos/large/2x/minecraft-1-logo-svg-vector.svg",
+              description: "Java y Bedrock"
+            },
+            {
+              name: "Garry's Mod",
+              logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Garry%27s_Mod_logo.svg/2048px-Garry%27s_Mod_logo.svg.png",
+              description: "Servidores rápidos y eficientes"
+            },
+            {
+              name: "Counter-Strike 2",
+              logo: "https://cdn2.steamgriddb.com/icon/e1bd06c3f8089e7552aa0552cb387c92/32/512x512.png",
+              description: "Para comunidades y equipos"
+            },
+            {
+              name: "Team Fortress 2",
+              logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Team_Fortress_2_style_logo.svg/1200px-Team_Fortress_2_style_logo.svg.png",
+              description: "Servidores personalizables"
+            },
+            {
+              name: "ARK: Survival Evolved",
+              logo: "https://upload.wikimedia.org/wikipedia/fr/7/7d/Ark_Survival_Evolved_Logo.png",
+              description: "Alto rendimiento garantizado"
+            }
+          ]);
+        }
       } catch (error) {
         console.error("Error loading games:", error);
         // Fallback to static games if API fails
